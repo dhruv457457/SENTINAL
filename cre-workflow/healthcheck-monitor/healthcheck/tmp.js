@@ -6352,6 +6352,7 @@ var ListSchema = /* @__PURE__ */ messageDesc(file_values_v1_values, 3);
 var DecimalSchema = /* @__PURE__ */ messageDesc(file_values_v1_values, 4);
 var file_sdk_v1alpha_sdk = /* @__PURE__ */ fileDesc("ChVzZGsvdjFhbHBoYS9zZGsucHJvdG8SC3Nkay52MWFscGhhIrQBChVTaW1wbGVDb25zZW5zdXNJbnB1dHMSIQoFdmFsdWUYASABKAsyEC52YWx1ZXMudjEuVmFsdWVIABIPCgVlcnJvchgCIAEoCUgAEjUKC2Rlc2NyaXB0b3JzGAMgASgLMiAuc2RrLnYxYWxwaGEuQ29uc2Vuc3VzRGVzY3JpcHRvchIhCgdkZWZhdWx0GAQgASgLMhAudmFsdWVzLnYxLlZhbHVlQg0KC29ic2VydmF0aW9uIpABCglGaWVsZHNNYXASMgoGZmllbGRzGAEgAygLMiIuc2RrLnYxYWxwaGEuRmllbGRzTWFwLkZpZWxkc0VudHJ5Gk8KC0ZpZWxkc0VudHJ5EgsKA2tleRgBIAEoCRIvCgV2YWx1ZRgCIAEoCzIgLnNkay52MWFscGhhLkNvbnNlbnN1c0Rlc2NyaXB0b3I6AjgBIoYBChNDb25zZW5zdXNEZXNjcmlwdG9yEjMKC2FnZ3JlZ2F0aW9uGAEgASgOMhwuc2RrLnYxYWxwaGEuQWdncmVnYXRpb25UeXBlSAASLAoKZmllbGRzX21hcBgCIAEoCzIWLnNkay52MWFscGhhLkZpZWxkc01hcEgAQgwKCmRlc2NyaXB0b3IiagoNUmVwb3J0UmVxdWVzdBIXCg9lbmNvZGVkX3BheWxvYWQYASABKAwSFAoMZW5jb2Rlcl9uYW1lGAIgASgJEhQKDHNpZ25pbmdfYWxnbxgDIAEoCRIUCgxoYXNoaW5nX2FsZ28YBCABKAkilwEKDlJlcG9ydFJlc3BvbnNlEhUKDWNvbmZpZ19kaWdlc3QYASABKAwSEgoGc2VxX25yGAIgASgEQgIwABIWCg5yZXBvcnRfY29udGV4dBgDIAEoDBISCgpyYXdfcmVwb3J0GAQgASgMEi4KBHNpZ3MYBSADKAsyIC5zZGsudjFhbHBoYS5BdHRyaWJ1dGVkU2lnbmF0dXJlIjsKE0F0dHJpYnV0ZWRTaWduYXR1cmUSEQoJc2lnbmF0dXJlGAEgASgMEhEKCXNpZ25lcl9pZBgCIAEoDSJrChFDYXBhYmlsaXR5UmVxdWVzdBIKCgJpZBgBIAEoCRIlCgdwYXlsb2FkGAIgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueRIOCgZtZXRob2QYAyABKAkSEwoLY2FsbGJhY2tfaWQYBCABKAUiWgoSQ2FwYWJpbGl0eVJlc3BvbnNlEicKB3BheWxvYWQYASABKAsyFC5nb29nbGUucHJvdG9idWYuQW55SAASDwoFZXJyb3IYAiABKAlIAEIKCghyZXNwb25zZSJYChNUcmlnZ2VyU3Vic2NyaXB0aW9uEgoKAmlkGAEgASgJEiUKB3BheWxvYWQYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55Eg4KBm1ldGhvZBgDIAEoCSJVChpUcmlnZ2VyU3Vic2NyaXB0aW9uUmVxdWVzdBI3Cg1zdWJzY3JpcHRpb25zGAEgAygLMiAuc2RrLnYxYWxwaGEuVHJpZ2dlclN1YnNjcmlwdGlvbiJACgdUcmlnZ2VyEg4KAmlkGAEgASgEQgIwABIlCgdwYXlsb2FkGAIgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSInChhBd2FpdENhcGFiaWxpdGllc1JlcXVlc3QSCwoDaWRzGAEgAygFIrgBChlBd2FpdENhcGFiaWxpdGllc1Jlc3BvbnNlEkgKCXJlc3BvbnNlcxgBIAMoCzI1LnNkay52MWFscGhhLkF3YWl0Q2FwYWJpbGl0aWVzUmVzcG9uc2UuUmVzcG9uc2VzRW50cnkaUQoOUmVzcG9uc2VzRW50cnkSCwoDa2V5GAEgASgFEi4KBXZhbHVlGAIgASgLMh8uc2RrLnYxYWxwaGEuQ2FwYWJpbGl0eVJlc3BvbnNlOgI4ASKgAQoORXhlY3V0ZVJlcXVlc3QSDgoGY29uZmlnGAEgASgMEisKCXN1YnNjcmliZRgCIAEoCzIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eUgAEicKB3RyaWdnZXIYAyABKAsyFC5zZGsudjFhbHBoYS5UcmlnZ2VySAASHQoRbWF4X3Jlc3BvbnNlX3NpemUYBCABKARCAjAAQgkKB3JlcXVlc3QimQEKD0V4ZWN1dGlvblJlc3VsdBIhCgV2YWx1ZRgBIAEoCzIQLnZhbHVlcy52MS5WYWx1ZUgAEg8KBWVycm9yGAIgASgJSAASSAoVdHJpZ2dlcl9zdWJzY3JpcHRpb25zGAMgASgLMicuc2RrLnYxYWxwaGEuVHJpZ2dlclN1YnNjcmlwdGlvblJlcXVlc3RIAEIICgZyZXN1bHQiVgoRR2V0U2VjcmV0c1JlcXVlc3QSLAoIcmVxdWVzdHMYASADKAsyGi5zZGsudjFhbHBoYS5TZWNyZXRSZXF1ZXN0EhMKC2NhbGxiYWNrX2lkGAIgASgFIiIKE0F3YWl0U2VjcmV0c1JlcXVlc3QSCwoDaWRzGAEgAygFIqsBChRBd2FpdFNlY3JldHNSZXNwb25zZRJDCglyZXNwb25zZXMYASADKAsyMC5zZGsudjFhbHBoYS5Bd2FpdFNlY3JldHNSZXNwb25zZS5SZXNwb25zZXNFbnRyeRpOCg5SZXNwb25zZXNFbnRyeRILCgNrZXkYASABKAUSKwoFdmFsdWUYAiABKAsyHC5zZGsudjFhbHBoYS5TZWNyZXRSZXNwb25zZXM6AjgBIi4KDVNlY3JldFJlcXVlc3QSCgoCaWQYASABKAkSEQoJbmFtZXNwYWNlGAIgASgJIkUKBlNlY3JldBIKCgJpZBgBIAEoCRIRCgluYW1lc3BhY2UYAiABKAkSDQoFb3duZXIYAyABKAkSDQoFdmFsdWUYBCABKAkiSgoLU2VjcmV0RXJyb3ISCgoCaWQYASABKAkSEQoJbmFtZXNwYWNlGAIgASgJEg0KBW93bmVyGAMgASgJEg0KBWVycm9yGAQgASgJIm4KDlNlY3JldFJlc3BvbnNlEiUKBnNlY3JldBgBIAEoCzITLnNkay52MWFscGhhLlNlY3JldEgAEikKBWVycm9yGAIgASgLMhguc2RrLnYxYWxwaGEuU2VjcmV0RXJyb3JIAEIKCghyZXNwb25zZSJBCg9TZWNyZXRSZXNwb25zZXMSLgoJcmVzcG9uc2VzGAEgAygLMhsuc2RrLnYxYWxwaGEuU2VjcmV0UmVzcG9uc2UquAEKD0FnZ3JlZ2F0aW9uVHlwZRIgChxBR0dSRUdBVElPTl9UWVBFX1VOU1BFQ0lGSUVEEAASGwoXQUdHUkVHQVRJT05fVFlQRV9NRURJQU4QARIeChpBR0dSRUdBVElPTl9UWVBFX0lERU5USUNBTBACEiIKHkFHR1JFR0FUSU9OX1RZUEVfQ09NTU9OX1BSRUZJWBADEiIKHkFHR1JFR0FUSU9OX1RZUEVfQ09NTU9OX1NVRkZJWBAEKjkKBE1vZGUSFAoQTU9ERV9VTlNQRUNJRklFRBAAEgwKCE1PREVfRE9OEAESDQoJTU9ERV9OT0RFEAJCaAoPY29tLnNkay52MWFscGhhQghTZGtQcm90b1ABogIDU1hYqgILU2RrLlYxYWxwaGHKAgtTZGtcVjFhbHBoYeICF1Nka1xWMWFscGhhXEdQQk1ldGFkYXRh6gIMU2RrOjpWMWFscGhhYgZwcm90bzM", [file_google_protobuf_any, file_google_protobuf_empty, file_values_v1_values]);
 var SimpleConsensusInputsSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 0);
+var ConsensusDescriptorSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 2);
 var ReportRequestSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 3);
 var ReportResponseSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 4);
 var CapabilityRequestSchema = /* @__PURE__ */ messageDesc(file_sdk_v1alpha_sdk, 6);
@@ -11776,6 +11777,33 @@ var defaultLookup = new NetworkLookup({
   testnetBySelectorByFamily
 });
 var getNetwork = (options) => defaultLookup.find(options);
+function consensusMedianAggregation() {
+  return simpleConsensus(AggregationType.MEDIAN);
+}
+
+class ConsensusImpl {
+  descriptor;
+  defaultValue;
+  constructor(descriptor, defaultValue) {
+    this.descriptor = descriptor;
+    this.defaultValue = defaultValue;
+  }
+  withDefault(t) {
+    return new ConsensusImpl(this.descriptor, t);
+  }
+  _usesUToForceShape(_) {}
+}
+function simpleConsensus(agg) {
+  return new ConsensusImpl(simpleDescriptor(agg));
+}
+function simpleDescriptor(agg) {
+  return create(ConsensusDescriptorSchema, {
+    descriptor: {
+      case: "aggregation",
+      value: agg
+    }
+  });
+}
 
 class Int64 {
   static INT64_MIN = -(2n ** 63n);
@@ -16708,7 +16736,12 @@ var configSchema = exports_external.object({
     name: exports_external.string(),
     poolAddress: exports_external.string(),
     usdcAddress: exports_external.string(),
-    chainName: exports_external.string()
+    chainName: exports_external.string(),
+    decimals: exports_external.number()
+  }),
+  offchain: exports_external.object({
+    defiLlamaTVL: exports_external.string(),
+    defiLlamaProtocol: exports_external.string()
   })
 });
 var RESERVE_ORACLE_ABI = [
@@ -16720,25 +16753,51 @@ var RESERVE_ORACLE_ABI = [
     type: "function"
   }
 ];
+function decodeBody(body) {
+  if (typeof body === "string")
+    return body;
+  const bytes = new Uint8Array(body);
+  let str = "";
+  for (let i2 = 0;i2 < bytes.length; i2++) {
+    str += String.fromCharCode(bytes[i2]);
+  }
+  return str;
+}
+function createTVLFetcher(url) {
+  return (nodeRuntime) => {
+    const httpClient = new ClientCapability2;
+    const response = httpClient.sendRequest(nodeRuntime, {
+      url,
+      method: "GET",
+      headers: { Accept: "application/json" }
+    }).result();
+    const bodyStr = decodeBody(response.body);
+    const tvl = parseFloat(bodyStr.trim());
+    if (isNaN(tvl) || tvl <= 0)
+      return 0n;
+    return BigInt(Math.floor(tvl));
+  };
+}
 function healthCheckWorkflow(runtime2, payload) {
-  runtime2.log("\uD83D\uDE80 Starting HealthCheck CRE Workflow...");
-  runtime2.log("\uD83C\uDFE5 HealthCheck Monitor - REAL Aave Data");
+  runtime2.log("\uD83D\uDE80 SENTINAL HealthCheck — Full CRE Pipeline");
+  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  runtime2.log("\uD83D\uDCCB Capabilities: Cron | EVM Read | HTTP | Consensus | EVM Write | DON Time");
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   const config = runtime2.config;
-  runtime2.log(`\uD83D\uDCCA Protocol: ${config.aaveProtocol.name}`);
-  runtime2.log("\uD83D\uDCE1 Reading from Aave on Ethereum Mainnet...");
-  const aaveNetwork = getNetwork({
+  runtime2.log("");
+  runtime2.log("\uD83D\uDCE1 STEP 1: Onchain Data [EVM Read — Ethereum Mainnet]");
+  const mainnetNetwork = getNetwork({
     chainFamily: "evm",
     chainSelectorName: config.aaveProtocol.chainName,
     isTestnet: false
   });
-  const aaveClient = new ClientCapability(aaveNetwork.chainSelector.selector);
+  const mainnetClient = new ClientCapability(mainnetNetwork.chainSelector.selector);
   const reserveDataCall = encodeFunctionData({
     abi: AavePool,
     functionName: "getReserveData",
     args: [config.aaveProtocol.usdcAddress]
   });
-  const reserveDataResult = aaveClient.callContract(runtime2, {
+  const reserveDataResult = mainnetClient.callContract(runtime2, {
     call: encodeCallMsg({
       from: zeroAddress,
       to: config.aaveProtocol.poolAddress,
@@ -16752,15 +16811,15 @@ function healthCheckWorkflow(runtime2, payload) {
     data: bytesToHex(reserveDataResult.data)
   });
   const aTokenAddress = reserveData.aTokenAddress;
-  const variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
-  runtime2.log(`✅ aToken (aUSDC): ${aTokenAddress}`);
-  runtime2.log(`✅ Variable Debt Token: ${variableDebtTokenAddress}`);
+  const debtTokenAddress = reserveData.variableDebtTokenAddress;
+  runtime2.log(`   aToken (aUSDC):     ${aTokenAddress}`);
+  runtime2.log(`   Debt Token:         ${debtTokenAddress}`);
   const totalSupplyCall = encodeFunctionData({
     abi: ERC20,
     functionName: "totalSupply",
     args: []
   });
-  const totalSupplyResult = aaveClient.callContract(runtime2, {
+  const depositsResult = mainnetClient.callContract(runtime2, {
     call: encodeCallMsg({
       from: zeroAddress,
       to: aTokenAddress,
@@ -16768,17 +16827,17 @@ function healthCheckWorkflow(runtime2, payload) {
     }),
     blockNumber: LAST_FINALIZED_BLOCK_NUMBER
   }).result();
-  const totalDeposits = decodeFunctionResult({
+  const rawDeposits = decodeFunctionResult({
     abi: ERC20,
     functionName: "totalSupply",
-    data: bytesToHex(totalSupplyResult.data)
+    data: bytesToHex(depositsResult.data)
   });
   const balanceCall = encodeFunctionData({
     abi: ERC20,
     functionName: "balanceOf",
     args: [aTokenAddress]
   });
-  const balanceResult = aaveClient.callContract(runtime2, {
+  const liquidityResult = mainnetClient.callContract(runtime2, {
     call: encodeCallMsg({
       from: zeroAddress,
       to: config.aaveProtocol.usdcAddress,
@@ -16786,78 +16845,109 @@ function healthCheckWorkflow(runtime2, payload) {
     }),
     blockNumber: LAST_FINALIZED_BLOCK_NUMBER
   }).result();
-  const availableLiquidity = decodeFunctionResult({
+  const rawLiquidity = decodeFunctionResult({
     abi: ERC20,
     functionName: "balanceOf",
-    data: bytesToHex(balanceResult.data)
+    data: bytesToHex(liquidityResult.data)
   });
-  const debtSupplyResult = aaveClient.callContract(runtime2, {
+  const borrowsResult = mainnetClient.callContract(runtime2, {
     call: encodeCallMsg({
       from: zeroAddress,
-      to: variableDebtTokenAddress,
+      to: debtTokenAddress,
       data: totalSupplyCall
     }),
     blockNumber: LAST_FINALIZED_BLOCK_NUMBER
   }).result();
-  const totalBorrows = decodeFunctionResult({
+  const rawBorrows = decodeFunctionResult({
     abi: ERC20,
     functionName: "totalSupply",
-    data: bytesToHex(debtSupplyResult.data)
+    data: bytesToHex(borrowsResult.data)
   });
-  const actualReserves = availableLiquidity + totalBorrows;
-  const depositsUSD = totalDeposits / 1000000n;
-  const actualUSD = actualReserves / 1000000n;
-  const liquidityUSD = availableLiquidity / 1000000n;
-  const borrowsUSD = totalBorrows / 1000000n;
-  runtime2.log(`\uD83D\uDCCA Total Deposits (claimed): $${depositsUSD.toString()}`);
-  runtime2.log(`\uD83D\uDCCA Available Liquidity:      $${liquidityUSD.toString()}`);
-  runtime2.log(`\uD83D\uDCCA Total Borrows:            $${borrowsUSD.toString()}`);
-  runtime2.log(`\uD83D\uDCCA Actual Reserves (liq+debt):$${actualUSD.toString()}`);
-  const ratio = Number(depositsUSD) > 0 ? Number(actualUSD) * 1e4 / Number(depositsUSD) : 1e4;
-  const ratioPercent = ratio / 100;
-  runtime2.log(`\uD83D\uDCC8 Solvency Ratio: ${ratioPercent.toFixed(2)}%`);
-  const utilization = Number(depositsUSD) > 0 ? Number(borrowsUSD) * 1e4 / Number(depositsUSD) : 0;
-  const utilizationPercent = utilization / 100;
-  runtime2.log(`\uD83D\uDCC8 Utilization Rate: ${utilizationPercent.toFixed(2)}%`);
+  const decimals = BigInt(10 ** config.aaveProtocol.decimals);
+  const depositsUSD = rawDeposits / decimals;
+  const liquidityUSD = rawLiquidity / decimals;
+  const borrowsUSD = rawBorrows / decimals;
+  const actualUSD = liquidityUSD + borrowsUSD;
+  const solvencyRatio = Number(depositsUSD) > 0 ? Number(actualUSD) * 1e4 / Number(depositsUSD) : 1e4;
+  const utilizationRate = Number(depositsUSD) > 0 ? Number(borrowsUSD) * 1e4 / Number(depositsUSD) : 0;
+  runtime2.log(`   ┌─ Deposits:    $${depositsUSD.toString()}`);
+  runtime2.log(`   ├─ Liquidity:   $${liquidityUSD.toString()}`);
+  runtime2.log(`   ├─ Borrows:     $${borrowsUSD.toString()}`);
+  runtime2.log(`   ├─ Actual:      $${actualUSD.toString()}`);
+  runtime2.log(`   ├─ Solvency:    ${(solvencyRatio / 100).toFixed(2)}%`);
+  runtime2.log(`   └─ Utilization: ${(utilizationRate / 100).toFixed(2)}%`);
+  runtime2.log("");
+  runtime2.log("\uD83C\uDF10 STEP 2: Offchain Data [HTTP + DON Consensus]");
+  runtime2.log("   Each DON node fetches DeFiLlama independently...");
+  runtime2.log("   Consensus: Median aggregation across all nodes");
+  const totalTVLFetcher = createTVLFetcher(config.offchain.defiLlamaTVL);
+  const totalTVL = runtime2.runInNodeMode(totalTVLFetcher, consensusMedianAggregation())().result();
+  runtime2.log(`   ✅ Total Aave V3 TVL (all chains): $${totalTVL.toString()}`);
+  runtime2.log("");
+  runtime2.log("\uD83D\uDD0D STEP 3: Cross-Reference Analysis");
+  runtime2.log("   Comparing onchain reserves vs offchain TVL...");
+  let crossRefRisk = 0;
+  const onchainUSDC = Number(depositsUSD);
+  const offchainTotalTVL = Number(totalTVL);
+  if (offchainTotalTVL > 0 && onchainUSDC > 0) {
+    const usdcShareOfTotal = onchainUSDC / offchainTotalTVL * 100;
+    runtime2.log(`   Onchain USDC Deposits:  $${depositsUSD.toString()}`);
+    runtime2.log(`   Offchain Total TVL:     $${totalTVL.toString()}`);
+    runtime2.log(`   USDC % of Total TVL:    ${usdcShareOfTotal.toFixed(1)}%`);
+    if (usdcShareOfTotal < 3 || usdcShareOfTotal > 50) {
+      crossRefRisk += 25;
+      runtime2.log("   ⚠️  USDC share outside expected range (3-50%)");
+    } else {
+      runtime2.log("   ✅ USDC share within expected range");
+    }
+  } else {
+    runtime2.log("   ⚠️  Missing offchain TVL data");
+    crossRefRisk += 10;
+  }
+  runtime2.log("");
+  runtime2.log("\uD83C\uDFAF STEP 4: Risk Assessment");
   let riskScore = 0;
-  if (ratio < 9500)
+  if (solvencyRatio < 9500)
     riskScore += 30;
-  if (ratio < 9000)
+  if (solvencyRatio < 9000)
     riskScore += 20;
-  if (ratio < 8000)
+  if (solvencyRatio < 8000)
     riskScore += 20;
-  if (utilization > 9000)
+  if (utilizationRate > 9000)
     riskScore += 15;
-  if (utilization > 9500)
+  if (utilizationRate > 9500)
     riskScore += 10;
-  const anomalyDetected = ratio < 9500 || utilization > 9500 || riskScore > 50;
-  if (anomalyDetected && ratio < 9000)
-    riskScore += 10;
+  riskScore += crossRefRisk;
+  if (riskScore > 100)
+    riskScore = 100;
+  const anomalyDetected = crossRefRisk > 0 || solvencyRatio < 9500 || utilizationRate > 9500;
   let severity;
   let statusText;
-  if (ratio >= 9500 && utilization < 9000) {
+  if (riskScore < 30 && solvencyRatio >= 9500) {
     severity = 0;
     statusText = "HEALTHY";
-    runtime2.log("✅ Status: HEALTHY");
-  } else if (ratio >= 9000 && utilization < 9500) {
+    runtime2.log("   ✅ Status: HEALTHY");
+  } else if (riskScore < 60 && solvencyRatio >= 9000) {
     severity = 1;
     statusText = "WARNING";
-    runtime2.log("⚠️  Status: WARNING");
+    runtime2.log("   ⚠️  Status: WARNING");
   } else {
     severity = 2;
     statusText = "CRITICAL";
-    runtime2.log("\uD83D\uDEA8 Status: CRITICAL");
+    runtime2.log("   \uD83D\uDEA8 Status: CRITICAL");
   }
-  runtime2.log(`\uD83C\uDFAF Risk Score: ${riskScore}/100`);
-  runtime2.log(`\uD83D\uDD0D Anomaly: ${anomalyDetected ? "YES" : "NO"}`);
-  runtime2.log("\uD83D\uDCE1 Reading from Oracle contract on Sepolia...");
+  runtime2.log(`   Risk Score:     ${riskScore}/100`);
+  runtime2.log(`   Anomaly:        ${anomalyDetected ? "YES \uD83D\uDD34" : "NO ✅"}`);
+  runtime2.log(`   Data Sources:   1 onchain (Aave) + 1 offchain (DeFiLlama)`);
+  runtime2.log("");
+  runtime2.log("\uD83D\uDCE1 STEP 5: Read Oracle State [EVM Read — Sepolia]");
   const sepoliaNetwork = getNetwork({
     chainFamily: "evm",
     chainSelectorName: config.chainSelector,
     isTestnet: true
   });
   const sepoliaClient = new ClientCapability(sepoliaNetwork.chainSelector.selector);
-  const callData = encodeFunctionData({
+  const checksCall = encodeFunctionData({
     abi: RESERVE_ORACLE_ABI,
     functionName: "totalChecks",
     args: []
@@ -16865,50 +16955,50 @@ function healthCheckWorkflow(runtime2, payload) {
   let currentChecks = 0;
   let checkNumber = 1;
   try {
-    const contractCall = sepoliaClient.callContract(runtime2, {
+    const checksResult = sepoliaClient.callContract(runtime2, {
       call: encodeCallMsg({
         from: zeroAddress,
         to: config.oracleAddress,
-        data: callData
+        data: checksCall
       }),
       blockNumber: LAST_FINALIZED_BLOCK_NUMBER
     }).result();
-    if (contractCall.data && contractCall.data.length > 0) {
-      const totalChecksData = decodeFunctionResult({
+    if (checksResult.data && checksResult.data.length > 0) {
+      const decoded = decodeFunctionResult({
         abi: RESERVE_ORACLE_ABI,
         functionName: "totalChecks",
-        data: bytesToHex(contractCall.data)
+        data: bytesToHex(checksResult.data)
       });
-      currentChecks = Number(totalChecksData);
+      currentChecks = Number(decoded);
       checkNumber = currentChecks + 1;
     } else {
-      runtime2.log("⚠️  Contract returned empty data, using check #1");
+      runtime2.log("   ⚠️  Empty response, using check #1");
     }
-  } catch (error) {
-    runtime2.log("⚠️  Could not read totalChecks, using check #1");
+  } catch {
+    runtime2.log("   ⚠️  Could not read totalChecks, using check #1");
   }
-  runtime2.log(`✅ Current checks: ${currentChecks}`);
-  runtime2.log(`✅ Next check: #${checkNumber}`);
-  runtime2.log("\uD83D\uDCDD Preparing health report...");
+  runtime2.log(`   ✅ Current: ${currentChecks} → Next: #${checkNumber}`);
+  runtime2.log("");
+  runtime2.log("\uD83D\uDCE4 STEP 6: Submit Report [EVM Write + DON Time]");
   const nowSeconds = BigInt(Math.floor(runtime2.now() / 1000));
   const reportData = encodeAbiParameters(parseAbiParameters("uint256 totalReservesUSD, uint256 totalClaimedUSD, uint256 globalRatio, uint256 riskScore, uint256 timestamp, uint256 checkNumber, uint8 severity, bool anomalyDetected"), [
     actualUSD,
     depositsUSD,
-    BigInt(Math.floor(ratio)),
+    BigInt(Math.floor(solvencyRatio)),
     BigInt(riskScore),
     nowSeconds,
     BigInt(checkNumber),
     severity,
     anomalyDetected
   ]);
-  runtime2.log("\uD83D\uDCDD Generating signed report via DON consensus...");
+  runtime2.log("   \uD83D\uDCDD Generating DON-signed report...");
   const reportResponse = runtime2.report({
     encodedPayload: hexToBase64(reportData),
     encoderName: "evm",
     signingAlgo: "ecdsa",
     hashingAlgo: "keccak256"
   }).result();
-  runtime2.log("\uD83D\uDCE4 Submitting report to Sepolia...");
+  runtime2.log("   \uD83D\uDCE4 Submitting to ReserveOracle on Sepolia...");
   const writeResult = sepoliaClient.writeReport(runtime2, {
     receiver: config.oracleAddress,
     report: reportResponse,
@@ -16917,22 +17007,37 @@ function healthCheckWorkflow(runtime2, payload) {
     }
   }).result();
   const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
-  runtime2.log(`✅ Transaction: ${txHash}`);
-  runtime2.log(`\uD83D\uDD17 https://sepolia.etherscan.io/tx/${txHash}`);
-  runtime2.log(`\uD83D\uDCCB Check #${checkNumber} recorded on Sepolia`);
+  runtime2.log("");
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  runtime2.log("✅ Real Aave data monitored successfully!");
+  runtime2.log("✅ SENTINAL Health Check Complete!");
+  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  runtime2.log(`   Onchain:    Aave V3 USDC (Ethereum Mainnet)`);
+  runtime2.log(`   Offchain:   DeFiLlama TVL (DON consensus-validated)`);
+  runtime2.log(`   Solvency:   ${(solvencyRatio / 100).toFixed(2)}%`);
+  runtime2.log(`   Risk:       ${riskScore}/100 — ${statusText}`);
+  runtime2.log(`   Check #:    ${checkNumber}`);
+  runtime2.log(`   Tx:         ${txHash}`);
+  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   return {
     success: true,
     protocol: config.aaveProtocol.name,
     checkNumber,
-    reserves: {
+    onchain: {
       deposits: depositsUSD.toString(),
       liquidity: liquidityUSD.toString(),
       borrows: borrowsUSD.toString(),
       actual: actualUSD.toString(),
-      solvencyRatio: ratioPercent,
-      utilizationRate: utilizationPercent
+      solvencyRatio: (solvencyRatio / 100).toFixed(2),
+      utilizationRate: (utilizationRate / 100).toFixed(2)
+    },
+    offchain: {
+      totalAaveTVL: totalTVL.toString(),
+      ethereumTVL: "N/A",
+      source: "DeFiLlama (DON consensus-validated)"
+    },
+    crossReference: {
+      crossRefRisk,
+      dataSources: 3
     },
     riskScore,
     severity: statusText,
