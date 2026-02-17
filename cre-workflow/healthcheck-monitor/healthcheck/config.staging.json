@@ -2,15 +2,46 @@
   "schedule": "*/60 * * * * *",
   "oracleAddress": "0xdc4348ab53a34407b92bb567b37ed4d9d5360096",
   "chainSelector": "ethereum-testnet-sepolia",
-  "aaveProtocol": {
-    "name": "Aave V3 Ethereum USDC",
-    "poolAddress": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
-    "usdcAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    "chainName": "ethereum-mainnet",
-    "decimals": 6
-  },
-  "offchain": {
-    "defiLlamaTVL": "https://api.llama.fi/tvl/aave-v3",
-    "defiLlamaProtocol": "https://api.llama.fi/protocol/aave-v3"
-  }
+  "protocols": [
+    {
+      "name": "Aave V3 USDC (Ethereum)",
+      "type": "aave",
+      "poolAddress": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+      "assetAddress": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "chainName": "ethereum-mainnet",
+      "isTestnet": false,
+      "decimals": 6,
+      "defiLlamaSlug": "aave-v3"
+    },
+    {
+      "name": "Aave V3 USDC (Arbitrum)",
+      "type": "aave",
+      "poolAddress": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+      "assetAddress": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "chainName": "ethereum-mainnet-arbitrum-1",
+      "isTestnet": false,
+      "decimals": 6,
+      "defiLlamaSlug": "aave-v3"
+    },
+    {
+      "name": "Aave V3 USDC (Base)",
+      "type": "aave",
+      "poolAddress": "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5",
+      "assetAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "chainName": "ethereum-mainnet-base-1",
+      "isTestnet": false,
+      "decimals": 6,
+      "defiLlamaSlug": "aave-v3"
+    },
+    {
+      "name": "Lido stETH",
+      "type": "lido",
+      "poolAddress": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+      "assetAddress": "0x0000000000000000000000000000000000000000",
+      "chainName": "ethereum-mainnet",
+      "isTestnet": false,
+      "decimals": 18,
+      "defiLlamaSlug": "lido"
+    }
+  ]
 }

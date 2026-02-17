@@ -16728,21 +16728,68 @@ var ERC20 = [
     type: "function"
   }
 ];
+var CompoundComet = [
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalBorrow",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  }
+];
+var LidoStETH = [
+  {
+    inputs: [],
+    name: "getTotalPooledEther",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  }
+];
+var ERC4626 = [
+  {
+    inputs: [],
+    name: "totalAssets",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  },
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function"
+  }
+];
 var configSchema = exports_external.object({
   schedule: exports_external.string(),
   oracleAddress: exports_external.string(),
   chainSelector: exports_external.string(),
-  aaveProtocol: exports_external.object({
+  protocols: exports_external.array(exports_external.object({
     name: exports_external.string(),
+    type: exports_external.string(),
     poolAddress: exports_external.string(),
-    usdcAddress: exports_external.string(),
+    assetAddress: exports_external.string(),
     chainName: exports_external.string(),
-    decimals: exports_external.number()
-  }),
-  offchain: exports_external.object({
-    defiLlamaTVL: exports_external.string(),
-    defiLlamaProtocol: exports_external.string()
-  })
+    isTestnet: exports_external.boolean(),
+    decimals: exports_external.number(),
+    defiLlamaSlug: exports_external.string()
+  }))
 });
 var RESERVE_ORACLE_ABI = [
   {
@@ -16763,11 +16810,180 @@ function decodeBody(body) {
   }
   return str;
 }
-function createTVLFetcher(url) {
+function evmCall(client, runtime2, to, data) {
+  return client.callContract(runtime2, {
+    call: encodeCallMsg({
+      from: zeroAddress,
+      to,
+      data
+    }),
+    blockNumber: LAST_FINALIZED_BLOCK_NUMBER
+  }).result().data;
+}
+var clientCache = {};
+function getClient(chainName, isTestnet) {
+  if (!clientCache[chainName]) {
+    const network248 = getNetwork({
+      chainFamily: "evm",
+      chainSelectorName: chainName,
+      isTestnet
+    });
+    clientCache[chainName] = new ClientCapability(network248.chainSelector.selector);
+  }
+  return clientCache[chainName];
+}
+function readAave(runtime2, client, protocol) {
+  const reserveCall = encodeFunctionData({
+    abi: AavePool,
+    functionName: "getReserveData",
+    args: [protocol.assetAddress]
+  });
+  const reserveData = decodeFunctionResult({
+    abi: AavePool,
+    functionName: "getReserveData",
+    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, reserveCall))
+  });
+  const aToken = reserveData.aTokenAddress;
+  const debtToken = reserveData.variableDebtTokenAddress;
+  const supplyCall = encodeFunctionData({ abi: ERC20, functionName: "totalSupply", args: [] });
+  const balanceCall = encodeFunctionData({ abi: ERC20, functionName: "balanceOf", args: [aToken] });
+  const deposits = decodeFunctionResult({
+    abi: ERC20,
+    functionName: "totalSupply",
+    data: bytesToHex(evmCall(client, runtime2, aToken, supplyCall))
+  });
+  const liquidity = decodeFunctionResult({
+    abi: ERC20,
+    functionName: "balanceOf",
+    data: bytesToHex(evmCall(client, runtime2, protocol.assetAddress, balanceCall))
+  });
+  const borrows = decodeFunctionResult({
+    abi: ERC20,
+    functionName: "totalSupply",
+    data: bytesToHex(evmCall(client, runtime2, debtToken, supplyCall))
+  });
+  const d = BigInt(10 ** protocol.decimals);
+  const claimedUSD = deposits / d;
+  const actualUSD = (liquidity + borrows) / d;
+  const ratio = Number(claimedUSD) > 0 ? Number(actualUSD) * 1e4 / Number(claimedUSD) : 1e4;
+  const util3 = Number(claimedUSD) > 0 ? Number(borrows / d) * 100 / Number(claimedUSD) : 0;
+  return {
+    name: protocol.name,
+    type: "aave",
+    chain: protocol.chainName,
+    claimed: claimedUSD,
+    actual: actualUSD,
+    solvencyRatio: ratio,
+    details: `Deposits=$${claimedUSD} | Liq=$${liquidity / d} | Borrows=$${borrows / d} | Util=${util3.toFixed(1)}%`
+  };
+}
+function readCompound(runtime2, client, protocol) {
+  const supplyCall = encodeFunctionData({ abi: CompoundComet, functionName: "totalSupply", args: [] });
+  const borrowCall = encodeFunctionData({ abi: CompoundComet, functionName: "totalBorrow", args: [] });
+  const balanceCall = encodeFunctionData({ abi: ERC20, functionName: "balanceOf", args: [protocol.poolAddress] });
+  const totalSupply = decodeFunctionResult({
+    abi: CompoundComet,
+    functionName: "totalSupply",
+    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, supplyCall))
+  });
+  const totalBorrow = decodeFunctionResult({
+    abi: CompoundComet,
+    functionName: "totalBorrow",
+    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, borrowCall))
+  });
+  const balance = decodeFunctionResult({
+    abi: ERC20,
+    functionName: "balanceOf",
+    data: bytesToHex(evmCall(client, runtime2, protocol.assetAddress, balanceCall))
+  });
+  const d = BigInt(10 ** protocol.decimals);
+  const claimedUSD = totalSupply / d;
+  const actualUSD = (balance + totalBorrow) / d;
+  const ratio = Number(claimedUSD) > 0 ? Number(actualUSD) * 1e4 / Number(claimedUSD) : 1e4;
+  const util3 = Number(claimedUSD) > 0 ? Number(totalBorrow / d) * 100 / Number(claimedUSD) : 0;
+  return {
+    name: protocol.name,
+    type: "compound",
+    chain: protocol.chainName,
+    claimed: claimedUSD,
+    actual: actualUSD,
+    solvencyRatio: ratio,
+    details: `Supply=$${claimedUSD} | Liq=$${balance / d} | Borrows=$${totalBorrow / d} | Util=${util3.toFixed(1)}%`
+  };
+}
+function readLido(runtime2, client, protocol) {
+  const pooledCall = encodeFunctionData({ abi: LidoStETH, functionName: "getTotalPooledEther", args: [] });
+  const supplyCall = encodeFunctionData({ abi: LidoStETH, functionName: "totalSupply", args: [] });
+  const pooledEther = decodeFunctionResult({
+    abi: LidoStETH,
+    functionName: "getTotalPooledEther",
+    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, pooledCall))
+  });
+  const totalStETH = decodeFunctionResult({
+    abi: LidoStETH,
+    functionName: "totalSupply",
+    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, supplyCall))
+  });
+  const d = BigInt(10 ** protocol.decimals);
+  const claimedETH = totalStETH / d;
+  const actualETH = pooledEther / d;
+  const ratio = Number(claimedETH) > 0 ? Number(actualETH) * 1e4 / Number(claimedETH) : 1e4;
+  return {
+    name: protocol.name,
+    type: "lido",
+    chain: protocol.chainName,
+    claimed: claimedETH,
+    actual: actualETH,
+    solvencyRatio: ratio,
+    details: `stETH=${claimedETH} ETH | Pooled=${actualETH} ETH | Backing=${(ratio / 100).toFixed(2)}%`
+  };
+}
+function readERC4626(runtime2, client, protocol) {
+  const assetsCall = encodeFunctionData({ abi: ERC4626, functionName: "totalAssets", args: [] });
+  const supplyCall = encodeFunctionData({ abi: ERC4626, functionName: "totalSupply", args: [] });
+  const totalAssets = decodeFunctionResult({
+    abi: ERC4626,
+    functionName: "totalAssets",
+    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, assetsCall))
+  });
+  const totalShares = decodeFunctionResult({
+    abi: ERC4626,
+    functionName: "totalSupply",
+    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, supplyCall))
+  });
+  const d = BigInt(10 ** protocol.decimals);
+  const claimedUSD = totalShares / d;
+  const actualUSD = totalAssets / d;
+  const ratio = Number(claimedUSD) > 0 ? Number(actualUSD) * 1e4 / Number(claimedUSD) : 1e4;
+  return {
+    name: protocol.name,
+    type: "erc4626",
+    chain: protocol.chainName,
+    claimed: claimedUSD,
+    actual: actualUSD,
+    solvencyRatio: ratio,
+    details: `Shares=$${claimedUSD} | Assets=$${actualUSD} | Backing=${(ratio / 100).toFixed(2)}%`
+  };
+}
+function readProtocol(runtime2, client, protocol) {
+  switch (protocol.type) {
+    case "aave":
+      return readAave(runtime2, client, protocol);
+    case "compound":
+      return readCompound(runtime2, client, protocol);
+    case "lido":
+      return readLido(runtime2, client, protocol);
+    case "erc4626":
+      return readERC4626(runtime2, client, protocol);
+    default:
+      throw new Error(`Unknown protocol type: ${protocol.type}`);
+  }
+}
+function createTVLFetcher(slug) {
   return (nodeRuntime) => {
     const httpClient = new ClientCapability2;
     const response = httpClient.sendRequest(nodeRuntime, {
-      url,
+      url: `https://api.llama.fi/tvl/${slug}`,
       method: "GET",
       headers: { Accept: "application/json" }
     }).result();
@@ -16779,155 +16995,99 @@ function createTVLFetcher(url) {
   };
 }
 function healthCheckWorkflow(runtime2, payload) {
-  runtime2.log("\uD83D\uDE80 SENTINAL HealthCheck — Full CRE Pipeline");
+  const config = runtime2.config;
+  const chainSet = [];
+  for (const p of config.protocols) {
+    if (chainSet.indexOf(p.chainName) === -1)
+      chainSet.push(p.chainName);
+  }
+  runtime2.log("\uD83D\uDE80 SENTINAL Multi-Chain Multi-Protocol HealthCheck");
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   runtime2.log("\uD83D\uDCCB Capabilities: Cron | EVM Read | HTTP | Consensus | EVM Write | DON Time");
+  runtime2.log(`\uD83D\uDCCA Monitoring ${config.protocols.length} protocols across ${chainSet.length} chains`);
+  runtime2.log(`\uD83D\uDD17 Chains: ${chainSet.join(", ")}`);
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  const config = runtime2.config;
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE1 STEP 1: Onchain Data [EVM Read — Ethereum Mainnet]");
-  const mainnetNetwork = getNetwork({
-    chainFamily: "evm",
-    chainSelectorName: config.aaveProtocol.chainName,
-    isTestnet: false
-  });
-  const mainnetClient = new ClientCapability(mainnetNetwork.chainSelector.selector);
-  const reserveDataCall = encodeFunctionData({
-    abi: AavePool,
-    functionName: "getReserveData",
-    args: [config.aaveProtocol.usdcAddress]
-  });
-  const reserveDataResult = mainnetClient.callContract(runtime2, {
-    call: encodeCallMsg({
-      from: zeroAddress,
-      to: config.aaveProtocol.poolAddress,
-      data: reserveDataCall
-    }),
-    blockNumber: LAST_FINALIZED_BLOCK_NUMBER
-  }).result();
-  const reserveData = decodeFunctionResult({
-    abi: AavePool,
-    functionName: "getReserveData",
-    data: bytesToHex(reserveDataResult.data)
-  });
-  const aTokenAddress = reserveData.aTokenAddress;
-  const debtTokenAddress = reserveData.variableDebtTokenAddress;
-  runtime2.log(`   aToken (aUSDC):     ${aTokenAddress}`);
-  runtime2.log(`   Debt Token:         ${debtTokenAddress}`);
-  const totalSupplyCall = encodeFunctionData({
-    abi: ERC20,
-    functionName: "totalSupply",
-    args: []
-  });
-  const depositsResult = mainnetClient.callContract(runtime2, {
-    call: encodeCallMsg({
-      from: zeroAddress,
-      to: aTokenAddress,
-      data: totalSupplyCall
-    }),
-    blockNumber: LAST_FINALIZED_BLOCK_NUMBER
-  }).result();
-  const rawDeposits = decodeFunctionResult({
-    abi: ERC20,
-    functionName: "totalSupply",
-    data: bytesToHex(depositsResult.data)
-  });
-  const balanceCall = encodeFunctionData({
-    abi: ERC20,
-    functionName: "balanceOf",
-    args: [aTokenAddress]
-  });
-  const liquidityResult = mainnetClient.callContract(runtime2, {
-    call: encodeCallMsg({
-      from: zeroAddress,
-      to: config.aaveProtocol.usdcAddress,
-      data: balanceCall
-    }),
-    blockNumber: LAST_FINALIZED_BLOCK_NUMBER
-  }).result();
-  const rawLiquidity = decodeFunctionResult({
-    abi: ERC20,
-    functionName: "balanceOf",
-    data: bytesToHex(liquidityResult.data)
-  });
-  const borrowsResult = mainnetClient.callContract(runtime2, {
-    call: encodeCallMsg({
-      from: zeroAddress,
-      to: debtTokenAddress,
-      data: totalSupplyCall
-    }),
-    blockNumber: LAST_FINALIZED_BLOCK_NUMBER
-  }).result();
-  const rawBorrows = decodeFunctionResult({
-    abi: ERC20,
-    functionName: "totalSupply",
-    data: bytesToHex(borrowsResult.data)
-  });
-  const decimals = BigInt(10 ** config.aaveProtocol.decimals);
-  const depositsUSD = rawDeposits / decimals;
-  const liquidityUSD = rawLiquidity / decimals;
-  const borrowsUSD = rawBorrows / decimals;
-  const actualUSD = liquidityUSD + borrowsUSD;
-  const solvencyRatio = Number(depositsUSD) > 0 ? Number(actualUSD) * 1e4 / Number(depositsUSD) : 1e4;
-  const utilizationRate = Number(depositsUSD) > 0 ? Number(borrowsUSD) * 1e4 / Number(depositsUSD) : 0;
-  runtime2.log(`   ┌─ Deposits:    $${depositsUSD.toString()}`);
-  runtime2.log(`   ├─ Liquidity:   $${liquidityUSD.toString()}`);
-  runtime2.log(`   ├─ Borrows:     $${borrowsUSD.toString()}`);
-  runtime2.log(`   ├─ Actual:      $${actualUSD.toString()}`);
-  runtime2.log(`   ├─ Solvency:    ${(solvencyRatio / 100).toFixed(2)}%`);
-  runtime2.log(`   └─ Utilization: ${(utilizationRate / 100).toFixed(2)}%`);
-  runtime2.log("");
+  runtime2.log("\uD83D\uDCE1 STEP 1: Onchain Data [EVM Read — Multi-Chain]");
+  const results = [];
+  for (const protocol of config.protocols) {
+    runtime2.log(`   ┌─ ${protocol.name} [${protocol.chainName}]`);
+    const client = getClient(protocol.chainName, protocol.isTestnet);
+    const result = readProtocol(runtime2, client, protocol);
+    results.push(result);
+    runtime2.log(`   ├─ ${result.details}`);
+    runtime2.log(`   └─ Solvency: ${(result.solvencyRatio / 100).toFixed(2)}%`);
+    runtime2.log("");
+  }
   runtime2.log("\uD83C\uDF10 STEP 2: Offchain Data [HTTP + DON Consensus]");
-  runtime2.log("   Each DON node fetches DeFiLlama independently...");
-  runtime2.log("   Consensus: Median aggregation across all nodes");
-  const totalTVLFetcher = createTVLFetcher(config.offchain.defiLlamaTVL);
-  const totalTVL = runtime2.runInNodeMode(totalTVLFetcher, consensusMedianAggregation())().result();
-  runtime2.log(`   ✅ Total Aave V3 TVL (all chains): $${totalTVL.toString()}`);
+  const slugs = [];
+  for (const p of config.protocols) {
+    if (slugs.indexOf(p.defiLlamaSlug) === -1)
+      slugs.push(p.defiLlamaSlug);
+  }
+  slugs.sort();
+  const tvlMap = {};
+  for (const slug of slugs) {
+    const fetcher = createTVLFetcher(slug);
+    const tvl = runtime2.runInNodeMode(fetcher, consensusMedianAggregation())().result();
+    tvlMap[slug] = tvl;
+    runtime2.log(`   ✅ ${slug}: $${tvl.toString()}`);
+  }
   runtime2.log("");
   runtime2.log("\uD83D\uDD0D STEP 3: Cross-Reference Analysis");
-  runtime2.log("   Comparing onchain reserves vs offchain TVL...");
   let crossRefRisk = 0;
-  const onchainUSDC = Number(depositsUSD);
-  const offchainTotalTVL = Number(totalTVL);
-  if (offchainTotalTVL > 0 && onchainUSDC > 0) {
-    const usdcShareOfTotal = onchainUSDC / offchainTotalTVL * 100;
-    runtime2.log(`   Onchain USDC Deposits:  $${depositsUSD.toString()}`);
-    runtime2.log(`   Offchain Total TVL:     $${totalTVL.toString()}`);
-    runtime2.log(`   USDC % of Total TVL:    ${usdcShareOfTotal.toFixed(1)}%`);
-    if (usdcShareOfTotal < 3 || usdcShareOfTotal > 50) {
-      crossRefRisk += 25;
-      runtime2.log("   ⚠️  USDC share outside expected range (3-50%)");
-    } else {
-      runtime2.log("   ✅ USDC share within expected range");
+  for (const result of results) {
+    const protocol = config.protocols.filter((p) => p.name === result.name)[0];
+    const offchainTVL = tvlMap[protocol.defiLlamaSlug];
+    if (offchainTVL && Number(offchainTVL) > 0 && Number(result.claimed) > 0) {
+      if (result.type === "lido") {
+        runtime2.log(`   ${result.name}: Solvency=${(result.solvencyRatio / 100).toFixed(2)}% | TVL=$${offchainTVL}`);
+        if (result.solvencyRatio < 9900) {
+          crossRefRisk += 20;
+          runtime2.log(`   ⚠️  Lido backing below 99%`);
+        } else {
+          runtime2.log(`   ✅ Lido backing healthy`);
+        }
+        continue;
+      }
+      const share = Number(result.claimed) / Number(offchainTVL) * 100;
+      runtime2.log(`   ${result.name}: Onchain=$${result.claimed} | TVL=$${offchainTVL} | Share=${share.toFixed(1)}%`);
+      if (share < 0.5 || share > 200) {
+        crossRefRisk += 15;
+        runtime2.log(`   ⚠️  Unusual ratio`);
+      } else {
+        runtime2.log(`   ✅ Within range`);
+      }
     }
-  } else {
-    runtime2.log("   ⚠️  Missing offchain TVL data");
-    crossRefRisk += 10;
   }
   runtime2.log("");
   runtime2.log("\uD83C\uDFAF STEP 4: Risk Assessment");
   let riskScore = 0;
-  if (solvencyRatio < 9500)
-    riskScore += 30;
-  if (solvencyRatio < 9000)
-    riskScore += 20;
-  if (solvencyRatio < 8000)
-    riskScore += 20;
-  if (utilizationRate > 9000)
-    riskScore += 15;
-  if (utilizationRate > 9500)
-    riskScore += 10;
+  let worstSolvency = 1e4;
+  let worstProtocol = "";
+  for (const result of results) {
+    if (result.solvencyRatio < worstSolvency) {
+      worstSolvency = result.solvencyRatio;
+      worstProtocol = result.name;
+    }
+    if (result.solvencyRatio < 9500)
+      riskScore += 15;
+    if (result.solvencyRatio < 9000)
+      riskScore += 10;
+    if (result.solvencyRatio < 8000)
+      riskScore += 10;
+  }
   riskScore += crossRefRisk;
   if (riskScore > 100)
     riskScore = 100;
-  const anomalyDetected = crossRefRisk > 0 || solvencyRatio < 9500 || utilizationRate > 9500;
+  const anomalyDetected = crossRefRisk > 0 || worstSolvency < 9500;
   let severity;
   let statusText;
-  if (riskScore < 30 && solvencyRatio >= 9500) {
+  if (riskScore < 30 && worstSolvency >= 9500) {
     severity = 0;
     statusText = "HEALTHY";
     runtime2.log("   ✅ Status: HEALTHY");
-  } else if (riskScore < 60 && solvencyRatio >= 9000) {
+  } else if (riskScore < 60 && worstSolvency >= 9000) {
     severity = 1;
     statusText = "WARNING";
     runtime2.log("   ⚠️  Status: WARNING");
@@ -16936,17 +17096,15 @@ function healthCheckWorkflow(runtime2, payload) {
     statusText = "CRITICAL";
     runtime2.log("   \uD83D\uDEA8 Status: CRITICAL");
   }
-  runtime2.log(`   Risk Score:     ${riskScore}/100`);
-  runtime2.log(`   Anomaly:        ${anomalyDetected ? "YES \uD83D\uDD34" : "NO ✅"}`);
-  runtime2.log(`   Data Sources:   1 onchain (Aave) + 1 offchain (DeFiLlama)`);
+  runtime2.log(`   Risk Score:      ${riskScore}/100`);
+  runtime2.log(`   Worst Protocol:  ${worstProtocol} (${(worstSolvency / 100).toFixed(2)}%)`);
+  runtime2.log(`   Anomaly:         ${anomalyDetected ? "YES \uD83D\uDD34" : "NO ✅"}`);
+  runtime2.log(`   Chains:          ${chainSet.length}`);
+  runtime2.log(`   Protocols:       ${results.length}`);
+  runtime2.log(`   Data Sources:    ${results.length} onchain + ${slugs.length} offchain`);
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE1 STEP 5: Read Oracle State [EVM Read — Sepolia]");
-  const sepoliaNetwork = getNetwork({
-    chainFamily: "evm",
-    chainSelectorName: config.chainSelector,
-    isTestnet: true
-  });
-  const sepoliaClient = new ClientCapability(sepoliaNetwork.chainSelector.selector);
+  runtime2.log("\uD83D\uDCE1 STEP 5: Read Oracle State [Sepolia]");
+  const sepoliaClient = getClient(config.chainSelector, true);
   const checksCall = encodeFunctionData({
     abi: RESERVE_ORACLE_ABI,
     functionName: "totalChecks",
@@ -16971,20 +17129,26 @@ function healthCheckWorkflow(runtime2, payload) {
       });
       currentChecks = Number(decoded);
       checkNumber = currentChecks + 1;
-    } else {
-      runtime2.log("   ⚠️  Empty response, using check #1");
     }
   } catch {
-    runtime2.log("   ⚠️  Could not read totalChecks, using check #1");
+    runtime2.log("   ⚠️  Could not read totalChecks");
   }
   runtime2.log(`   ✅ Current: ${currentChecks} → Next: #${checkNumber}`);
   runtime2.log("");
   runtime2.log("\uD83D\uDCE4 STEP 6: Submit Report [EVM Write + DON Time]");
   const nowSeconds = BigInt(Math.floor(runtime2.now() / 1000));
+  let totalClaimedUSD = 0n;
+  let totalActualUSD = 0n;
+  for (const r of results) {
+    if (r.type === "aave" || r.type === "compound" || r.type === "erc4626") {
+      totalClaimedUSD += r.claimed;
+      totalActualUSD += r.actual;
+    }
+  }
   const reportData = encodeAbiParameters(parseAbiParameters("uint256 totalReservesUSD, uint256 totalClaimedUSD, uint256 globalRatio, uint256 riskScore, uint256 timestamp, uint256 checkNumber, uint8 severity, bool anomalyDetected"), [
-    actualUSD,
-    depositsUSD,
-    BigInt(Math.floor(solvencyRatio)),
+    totalActualUSD,
+    totalClaimedUSD,
+    BigInt(Math.floor(worstSolvency)),
     BigInt(riskScore),
     nowSeconds,
     BigInt(checkNumber),
@@ -17002,42 +17166,43 @@ function healthCheckWorkflow(runtime2, payload) {
   const writeResult = sepoliaClient.writeReport(runtime2, {
     receiver: config.oracleAddress,
     report: reportResponse,
-    gasConfig: {
-      gasLimit: "500000"
-    }
+    gasConfig: { gasLimit: "500000" }
   }).result();
   const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
   runtime2.log("");
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  runtime2.log("✅ SENTINAL Health Check Complete!");
+  runtime2.log("✅ SENTINAL Multi-Chain Health Check Complete!");
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  runtime2.log(`   Onchain:    Aave V3 USDC (Ethereum Mainnet)`);
-  runtime2.log(`   Offchain:   DeFiLlama TVL (DON consensus-validated)`);
-  runtime2.log(`   Solvency:   ${(solvencyRatio / 100).toFixed(2)}%`);
-  runtime2.log(`   Risk:       ${riskScore}/100 — ${statusText}`);
-  runtime2.log(`   Check #:    ${checkNumber}`);
-  runtime2.log(`   Tx:         ${txHash}`);
+  for (const r of results) {
+    const emoji = r.solvencyRatio >= 9500 ? "✅" : r.solvencyRatio >= 9000 ? "⚠️" : "\uD83D\uDEA8";
+    runtime2.log(`   ${emoji} ${r.name}: ${(r.solvencyRatio / 100).toFixed(2)}%`);
+  }
+  runtime2.log(`   \uD83D\uDD17 Chains:     ${chainSet.length} (${chainSet.join(", ")})`);
+  runtime2.log(`   \uD83D\uDCCA Protocols:  ${results.length}`);
+  runtime2.log(`   Risk:          ${riskScore}/100 — ${statusText}`);
+  runtime2.log(`   Check #:       ${checkNumber}`);
+  runtime2.log(`   Tx:            ${txHash}`);
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   return {
     success: true,
-    protocol: config.aaveProtocol.name,
     checkNumber,
-    onchain: {
-      deposits: depositsUSD.toString(),
-      liquidity: liquidityUSD.toString(),
-      borrows: borrowsUSD.toString(),
-      actual: actualUSD.toString(),
-      solvencyRatio: (solvencyRatio / 100).toFixed(2),
-      utilizationRate: (utilizationRate / 100).toFixed(2)
-    },
-    offchain: {
-      totalAaveTVL: totalTVL.toString(),
-      ethereumTVL: "N/A",
-      source: "DeFiLlama (DON consensus-validated)"
-    },
-    crossReference: {
-      crossRefRisk,
-      dataSources: 3
+    chains: chainSet,
+    protocols: results.map((r) => ({
+      name: r.name,
+      type: r.type,
+      chain: r.chain,
+      solvency: (r.solvencyRatio / 100).toFixed(2),
+      details: r.details
+    })),
+    offchain: Object.keys(tvlMap).map((slug) => ({
+      slug,
+      tvl: tvlMap[slug].toString()
+    })),
+    aggregate: {
+      totalClaimedUSD: totalClaimedUSD.toString(),
+      totalActualUSD: totalActualUSD.toString(),
+      worstSolvency: (worstSolvency / 100).toFixed(2),
+      worstProtocol
     },
     riskScore,
     severity: statusText,

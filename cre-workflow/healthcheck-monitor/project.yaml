@@ -4,3 +4,7 @@ staging-settings:
       url: https://ethereum-sepolia-rpc.publicnode.com
     - chain-name: ethereum-mainnet
       url: https://eth.llamarpc.com
+    - chain-name: ethereum-mainnet-arbitrum-1
+      url: https://arb1.arbitrum.io/rpc
+    - chain-name: ethereum-mainnet-base-1
+      url: https://mainnet.base.org
