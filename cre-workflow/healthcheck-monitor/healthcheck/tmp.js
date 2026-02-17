@@ -16780,6 +16780,7 @@ var configSchema = exports_external.object({
   schedule: exports_external.string(),
   oracleAddress: exports_external.string(),
   chainSelector: exports_external.string(),
+  discordWebhookUrl: exports_external.string().optional(),
   protocols: exports_external.array(exports_external.object({
     name: exports_external.string(),
     type: exports_external.string(),
@@ -16994,6 +16995,60 @@ function createTVLFetcher(slug) {
     return BigInt(Math.floor(tvl));
   };
 }
+var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+function toBase64(str) {
+  let result = "";
+  let i2 = 0;
+  while (i2 < str.length) {
+    const a = str.charCodeAt(i2++);
+    const b = i2 < str.length ? str.charCodeAt(i2++) : 0;
+    const c = i2 < str.length ? str.charCodeAt(i2++) : 0;
+    const triplet = a << 16 | b << 8 | c;
+    result += B64[triplet >> 18 & 63];
+    result += B64[triplet >> 12 & 63];
+    result += i2 - 2 < str.length ? B64[triplet >> 6 & 63] : "=";
+    result += i2 - 1 < str.length ? B64[triplet & 63] : "=";
+  }
+  return result;
+}
+function createDiscordAlerter(webhookUrl, data) {
+  return (nodeRuntime) => {
+    if (!webhookUrl)
+      return 0n;
+    const httpClient = new ClientCapability2;
+    const color = data.riskScore > 0 ? 15158332 : 3066993;
+    const payload = JSON.stringify({
+      username: "SENTINAL Guardian",
+      embeds: [
+        {
+          title: `Health Check #${data.checkNumber} Complete`,
+          color,
+          fields: [
+            { name: "Status", value: data.severity, inline: true },
+            { name: "Risk Score", value: `${data.riskScore}/100`, inline: true },
+            { name: "Coverage", value: `${data.protocols} Protocols on ${data.chains} Chains`, inline: false },
+            { name: "Aggregate Reserves", value: `$${data.totalActualUSD}`, inline: true },
+            { name: "Worst Solvency", value: `${data.worstSolvency}% (${data.worstProtocol})`, inline: true },
+            { name: "Transaction", value: `[View on Etherscan](https://sepolia.etherscan.io/tx/${data.txHash})`, inline: false }
+          ],
+          footer: { text: "Powered by Chainlink CRE | SENTINAL" }
+        }
+      ]
+    });
+    const encoded = toBase64(payload);
+    try {
+      httpClient.sendRequest(nodeRuntime, {
+        url: webhookUrl,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: encoded
+      }).result();
+      return 1n;
+    } catch {
+      return 0n;
+    }
+  };
+}
 function healthCheckWorkflow(runtime2, payload) {
   const config = runtime2.config;
   const chainSet = [];
@@ -17169,6 +17224,27 @@ function healthCheckWorkflow(runtime2, payload) {
     gasConfig: { gasLimit: "500000" }
   }).result();
   const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
+  if (config.discordWebhookUrl) {
+    runtime2.log("");
+    runtime2.log("\uD83D\uDD14 STEP 7: Discord Alert [HTTP POST]");
+    const alerter = createDiscordAlerter(config.discordWebhookUrl, {
+      checkNumber,
+      riskScore,
+      severity: statusText,
+      protocols: results.length,
+      chains: chainSet.length,
+      totalActualUSD: totalActualUSD.toString(),
+      worstSolvency: (worstSolvency / 100).toFixed(2),
+      worstProtocol,
+      txHash
+    });
+    const alertResult = runtime2.runInNodeMode(alerter, consensusMedianAggregation())().result();
+    if (alertResult > 0n) {
+      runtime2.log("   ✅ Alert sent to Discord");
+    } else {
+      runtime2.log("   ❌ Alert failed");
+    }
+  }
   runtime2.log("");
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   runtime2.log("✅ SENTINAL Multi-Chain Health Check Complete!");
@@ -17179,6 +17255,7 @@ function healthCheckWorkflow(runtime2, payload) {
   }
   runtime2.log(`   \uD83D\uDD17 Chains:     ${chainSet.length} (${chainSet.join(", ")})`);
   runtime2.log(`   \uD83D\uDCCA Protocols:  ${results.length}`);
+  runtime2.log(`   \uD83D\uDCB0 Reserves:   $${totalActualUSD}`);
   runtime2.log(`   Risk:          ${riskScore}/100 — ${statusText}`);
   runtime2.log(`   Check #:       ${checkNumber}`);
   runtime2.log(`   Tx:            ${txHash}`);

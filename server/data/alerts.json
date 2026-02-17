@@ -1,0 +1,14 @@
+{
+  "discord": {
+    "enabled": true,
+    "webhookUrl": "https://discord.com/api/webhooks/1473271148572704810/m_34uLrjaNJHIQbsZLmmgAK3V9wGZCeaQAF29DROQeSYPQ-JbyvlzqgFqKgICwGinIgv"
+  },
+  "telegram": {
+    "enabled": false,
+    "botToken": "",
+    "chatId": ""
+  },
+  "alertOnHealthy": true,
+  "alertOnWarning": true,
+  "alertOnCritical": true
+}

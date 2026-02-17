@@ -2,7 +2,7 @@
   "schedule": "*/60 * * * * *",
   "oracleAddress": "0xdc4348ab53a34407b92bb567b37ed4d9d5360096",
   "chainSelector": "ethereum-testnet-sepolia",
-  "protocols": [
+"discordWebhookUrl": "https://discord.com/api/webhooks/1473271148572704810/m_34uLrjaNJHIQbsZLmmgAK3V9wGZCeaQAF29DROQeSYPQ-JbyvlzqgFqKgICwGinIgv",  "protocols": [
     {
       "name": "Aave V3 USDC (Ethereum)",
       "type": "aave",

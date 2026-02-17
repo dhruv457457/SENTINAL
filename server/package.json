@@ -1,0 +1,15 @@
+{
+  "name": "sentinal-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "server": "node server/index.mjs",
+    "check": "node scripts/run-and-report.mjs",
+    "check:broadcast": "node scripts/run-and-report.mjs --broadcast",
+    "test:alert": "curl -X POST http://localhost:3001/api/alerts/test"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}

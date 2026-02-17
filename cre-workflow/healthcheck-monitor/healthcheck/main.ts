@@ -26,6 +26,7 @@ const configSchema = z.object({
 	schedule: z.string(),
 	oracleAddress: z.string(),
 	chainSelector: z.string(),
+	discordWebhookUrl: z.string().optional(),
 	protocols: z.array(
 		z.object({
 			name: z.string(),
@@ -104,7 +105,7 @@ function evmCall(
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// EVM CLIENT CACHE (one client per chain)
+// EVM CLIENT CACHE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const clientCache: Record<string, EVMClient> = {}
@@ -285,7 +286,7 @@ function readProtocol(
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// HTTP + CONSENSUS (Capabilities 3 & 4)
+// HTTP + CONSENSUS (DeFiLlama TVL)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function createTVLFetcher(slug: string) {
@@ -307,16 +308,85 @@ function createTVLFetcher(slug: string) {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔔 DISCORD ALERT (base64 encoded body for CRE)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+
+function toBase64(str: string): string {
+	let result = ''
+	let i = 0
+	while (i < str.length) {
+		const a = str.charCodeAt(i++)
+		const b = i < str.length ? str.charCodeAt(i++) : 0
+		const c = i < str.length ? str.charCodeAt(i++) : 0
+		const triplet = (a << 16) | (b << 8) | c
+
+		result += B64[(triplet >> 18) & 0x3f]
+		result += B64[(triplet >> 12) & 0x3f]
+		result += i - 2 < str.length ? B64[(triplet >> 6) & 0x3f] : '='
+		result += i - 1 < str.length ? B64[triplet & 0x3f] : '='
+	}
+	return result
+}
+
+function createDiscordAlerter(webhookUrl: string, data: any) {
+	return (nodeRuntime: NodeRuntime<Config>): bigint => {
+		if (!webhookUrl) return 0n
+
+		const httpClient = new HTTPClient()
+		const color = data.riskScore > 0 ? 15158332 : 3066993
+
+		const payload = JSON.stringify({
+			username: 'SENTINAL Guardian',
+			embeds: [
+				{
+					title: `Health Check #${data.checkNumber} Complete`,
+					color: color,
+					fields: [
+						{ name: 'Status', value: data.severity, inline: true },
+						{ name: 'Risk Score', value: `${data.riskScore}/100`, inline: true },
+						{ name: 'Coverage', value: `${data.protocols} Protocols on ${data.chains} Chains`, inline: false },
+						{ name: 'Aggregate Reserves', value: `$${data.totalActualUSD}`, inline: true },
+						{ name: 'Worst Solvency', value: `${data.worstSolvency}% (${data.worstProtocol})`, inline: true },
+						{ name: 'Transaction', value: `[View on Etherscan](https://sepolia.etherscan.io/tx/${data.txHash})`, inline: false },
+					],
+					footer: { text: 'Powered by Chainlink CRE | SENTINAL' },
+				},
+			],
+		})
+
+		// CRE WASM runtime has no btoa — use manual base64
+		const encoded = toBase64(payload)
+
+		try {
+			httpClient
+				.sendRequest(nodeRuntime, {
+					url: webhookUrl,
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: encoded,
+				})
+				.result()
+			return 1n
+		} catch {
+			return 0n
+		}
+	}
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN WORKFLOW
 //
-// Multi-Chain + Multi-Protocol × 6 CRE Capabilities
+// Multi-Chain + Multi-Protocol × 7 Steps
 //
 // 1. CRON TRIGGER       — Schedule-based
-// 2. EVM READ           — 3 chains × 6 protocols
-// 3. HTTP               — DeFiLlama per protocol
+// 2. EVM READ           — 3 chains × 4 protocols
+// 3. HTTP GET           — DeFiLlama TVL
 // 4. CONSENSUS          — runInNodeMode + median
 // 5. EVM WRITE          — DON-signed → Sepolia
 // 6. RUNTIME.NOW()      — Deterministic DON time
+// 7. HTTP POST          — Discord webhook alert
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function healthCheckWorkflow(
@@ -325,7 +395,6 @@ function healthCheckWorkflow(
 ): Record<string, unknown> {
 	const config = runtime.config
 
-	// Count unique chains
 	const chainSet: string[] = []
 	for (const p of config.protocols) {
 		if (chainSet.indexOf(p.chainName) === -1) chainSet.push(p.chainName)
@@ -570,6 +639,37 @@ function healthCheckWorkflow(
 	const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32))
 
 	// ═══════════════════════════════════════════════
+	// STEP 7: DISCORD ALERT (HTTP POST)
+	// ═══════════════════════════════════════════════
+
+	if (config.discordWebhookUrl) {
+		runtime.log('')
+		runtime.log('🔔 STEP 7: Discord Alert [HTTP POST]')
+
+		const alerter = createDiscordAlerter(config.discordWebhookUrl, {
+			checkNumber,
+			riskScore,
+			severity: statusText,
+			protocols: results.length,
+			chains: chainSet.length,
+			totalActualUSD: totalActualUSD.toString(),
+			worstSolvency: (worstSolvency / 100).toFixed(2),
+			worstProtocol: worstProtocol,
+			txHash,
+		})
+
+		const alertResult = runtime
+			.runInNodeMode(alerter, consensusMedianAggregation<bigint>())()
+			.result()
+
+		if (alertResult > 0n) {
+			runtime.log('   ✅ Alert sent to Discord')
+		} else {
+			runtime.log('   ❌ Alert failed')
+		}
+	}
+
+	// ═══════════════════════════════════════════════
 	// SUMMARY
 	// ═══════════════════════════════════════════════
 
@@ -583,6 +683,7 @@ function healthCheckWorkflow(
 	}
 	runtime.log(`   🔗 Chains:     ${chainSet.length} (${chainSet.join(', ')})`)
 	runtime.log(`   📊 Protocols:  ${results.length}`)
+	runtime.log(`   💰 Reserves:   $${totalActualUSD}`)
 	runtime.log(`   Risk:          ${riskScore}/100 — ${statusText}`)
 	runtime.log(`   Check #:       ${checkNumber}`)
 	runtime.log(`   Tx:            ${txHash}`)
