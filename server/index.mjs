@@ -175,16 +175,21 @@ async function sendTelegram(botToken, chatId, result) {
 app.post('/api/report', async (req, res) => {
     try {
         const result = req.body;
+
+        // Auto-increment check number from server history
+        const existingHistory = loadHistory();
+        const lastCheck = existingHistory.length > 0 ? existingHistory[existingHistory.length - 1].checkNumber : 0;
+        result.checkNumber = lastCheck + 1;
+
         console.log(`\n📥 Received Check #${result.checkNumber} — ${result.severity}`);
 
         // Store in history
-        const history = loadHistory();
-        history.push({
+        existingHistory.push({
             ...result,
             receivedAt: new Date().toISOString(),
         });
-        if (history.length > 100) history.splice(0, history.length - 100);
-        saveHistory(history);
+        if (existingHistory.length > 100) existingHistory.splice(0, existingHistory.length - 100);
+        saveHistory(existingHistory);
 
         // Send alerts
         const alertConfig = loadAlertConfig();
