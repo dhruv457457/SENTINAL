@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
+import { createOnchainReporter } from './onchain-reporter.mjs';
 
 const app = express();
 app.use(cors());
@@ -13,6 +15,20 @@ app.use(express.json());
 const PORT = process.env.PORT || 3001;
 const HISTORY_FILE = './data/history.json';
 const CONFIG_FILE = './data/alerts.json';
+
+// Onchain reporter
+const ORACLE_ADDRESS = process.env.ORACLE_ADDRESS || '';
+const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
+const SEPOLIA_RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
+
+let onchainReporter = null;
+if (ORACLE_ADDRESS && PRIVATE_KEY) {
+    const pk = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
+    onchainReporter = createOnchainReporter(ORACLE_ADDRESS, pk, SEPOLIA_RPC);
+    console.log(`📝 Onchain reporter enabled → ${ORACLE_ADDRESS}`);
+} else {
+    console.log('⚠️  Onchain reporter disabled (set ORACLE_ADDRESS & PRIVATE_KEY env vars)');
+}
 
 // Ensure data dir exists
 if (!fs.existsSync('./data')) fs.mkdirSync('./data', { recursive: true });
@@ -155,7 +171,7 @@ async function sendTelegram(botToken, chatId, result) {
 // ROUTES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// POST /api/report — Receives CRE workflow result, stores + sends alerts
+// POST /api/report — Receives CRE workflow result, stores + sends alerts + onchain
 app.post('/api/report', async (req, res) => {
     try {
         const result = req.body;
@@ -167,7 +183,6 @@ app.post('/api/report', async (req, res) => {
             ...result,
             receivedAt: new Date().toISOString(),
         });
-        // Keep last 100 checks
         if (history.length > 100) history.splice(0, history.length - 100);
         saveHistory(history);
 
@@ -175,14 +190,12 @@ app.post('/api/report', async (req, res) => {
         const alertConfig = loadAlertConfig();
         const alertResults = [];
 
-        // Check if we should alert for this severity
         const shouldAlert =
             (result.severity === 'HEALTHY' && alertConfig.alertOnHealthy) ||
             (result.severity === 'WARNING' && alertConfig.alertOnWarning) ||
             (result.severity === 'CRITICAL' && alertConfig.alertOnCritical);
 
         if (shouldAlert) {
-            // Discord
             if (alertConfig.discord.enabled && alertConfig.discord.webhookUrl) {
                 try {
                     const r = await sendDiscord(alertConfig.discord.webhookUrl, result);
@@ -194,7 +207,6 @@ app.post('/api/report', async (req, res) => {
                 }
             }
 
-            // Telegram
             if (alertConfig.telegram.enabled && alertConfig.telegram.botToken && alertConfig.telegram.chatId) {
                 try {
                     const r = await sendTelegram(alertConfig.telegram.botToken, alertConfig.telegram.chatId, result);
@@ -209,10 +221,18 @@ app.post('/api/report', async (req, res) => {
             console.log(`   ⏭️  Skipped alerts (${result.severity} alerts disabled)`);
         }
 
+        // Submit per-protocol data onchain
+        let onchainResult = null;
+        if (onchainReporter) {
+            console.log('   📝 Submitting per-protocol data onchain...');
+            onchainResult = await onchainReporter.submitProtocolData(result);
+        }
+
         res.json({
             stored: true,
             checkNumber: result.checkNumber,
             alerts: alertResults,
+            onchain: onchainResult,
         });
     } catch (err) {
         console.error('❌ Error processing report:', err.message);
@@ -220,25 +240,25 @@ app.post('/api/report', async (req, res) => {
     }
 });
 
-// GET /api/history — Returns all stored health checks
+// GET /api/history
 app.get('/api/history', (req, res) => {
     const history = loadHistory();
     res.json(history);
 });
 
-// GET /api/latest — Returns the most recent health check
+// GET /api/latest
 app.get('/api/latest', (req, res) => {
     const history = loadHistory();
     if (history.length === 0) return res.json(null);
     res.json(history[history.length - 1]);
 });
 
-// GET /api/alerts/config — Get alert configuration
+// GET /api/alerts/config
 app.get('/api/alerts/config', (req, res) => {
     res.json(loadAlertConfig());
 });
 
-// PUT /api/alerts/config — Update alert configuration (from frontend)
+// PUT /api/alerts/config
 app.put('/api/alerts/config', (req, res) => {
     const config = req.body;
     saveAlertConfig(config);
@@ -246,7 +266,7 @@ app.put('/api/alerts/config', (req, res) => {
     res.json({ success: true, config });
 });
 
-// POST /api/alerts/test — Send a test alert
+// POST /api/alerts/test
 app.post('/api/alerts/test', async (req, res) => {
     const alertConfig = loadAlertConfig();
     const testResult = {
@@ -289,9 +309,25 @@ app.post('/api/alerts/test', async (req, res) => {
     res.json({ results });
 });
 
-// Health check endpoint
+// Health check
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', uptime: process.uptime() });
+    res.json({ status: 'ok', uptime: process.uptime(), onchainEnabled: !!onchainReporter });
+});
+
+// GET /api/onchain/dashboard
+app.get('/api/onchain/dashboard', async (req, res) => {
+    if (!onchainReporter) return res.status(503).json({ error: 'Onchain reporter not configured' });
+    const data = await onchainReporter.getDashboardData();
+    if (!data) return res.status(500).json({ error: 'Failed to read contract' });
+    res.json(data);
+});
+
+// GET /api/onchain/stats
+app.get('/api/onchain/stats', async (req, res) => {
+    if (!onchainReporter) return res.status(503).json({ error: 'Onchain reporter not configured' });
+    const stats = await onchainReporter.getStatistics();
+    if (!stats) return res.status(500).json({ error: 'Failed to read contract' });
+    res.json(stats);
 });
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -303,11 +339,12 @@ app.listen(PORT, () => {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('🛡️  SENTINAL Alert Server');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log(`📡 API:     http://localhost:${PORT}`);
-    console.log(`📥 Report:  POST /api/report`);
-    console.log(`📊 History: GET  /api/history`);
-    console.log(`🔔 Config:  GET/PUT /api/alerts/config`);
-    console.log(`🧪 Test:    POST /api/alerts/test`);
+    console.log(`📡 API:       http://localhost:${PORT}`);
+    console.log(`📥 Report:    POST /api/report`);
+    console.log(`📊 History:   GET  /api/history`);
+    console.log(`🔔 Config:    GET/PUT /api/alerts/config`);
+    console.log(`🧪 Test:      POST /api/alerts/test`);
+    console.log(`⛓️  Onchain:   ${onchainReporter ? 'ENABLED → ' + ORACLE_ADDRESS : 'DISABLED'}`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('');
 });

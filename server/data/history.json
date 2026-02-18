@@ -178,5 +178,425 @@
     "success": true,
     "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "receivedAt": "2026-02-17T11:46:36.161Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4603766975",
+      "totalClaimedUSD": "4603503799",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 7,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26632320307"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18911391789"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3905031137 | Liq=$1241805682 | Borrows=$2663464726 | Util=68.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281596821 | Liq=$114337147 | Borrows=$167260731 | Util=59.4%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$416875841 | Liq=$76850425 | Borrows=$340048262 | Util=81.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9472835 ETH | Pooled=9472835 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido"
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receivedAt": "2026-02-18T06:32:13.442Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4603766975",
+      "totalClaimedUSD": "4603503799",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 7,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26632320307"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18911391789"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3905031137 | Liq=$1241805682 | Borrows=$2663464726 | Util=68.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281596821 | Liq=$114337147 | Borrows=$167260731 | Util=59.4%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$416875841 | Liq=$76850425 | Borrows=$340048262 | Util=81.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9472835 ETH | Pooled=9472835 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido"
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receivedAt": "2026-02-18T06:33:29.957Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4593648388",
+      "totalClaimedUSD": "4593406342",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 1,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26640233578"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18936201458"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3894854491 | Liq=$1230975124 | Borrows=$2664119963 | Util=68.4%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281561559 | Liq=$114122015 | Borrows=$167440675 | Util=59.5%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$416990292 | Liq=$76912649 | Borrows=$340077960 | Util=81.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9473016 ETH | Pooled=9473016 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido"
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receivedAt": "2026-02-18T07:40:42.910Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4589543353",
+      "totalClaimedUSD": "4589301159",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 1,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26640233578"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18936201458"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3890787427 | Liq=$1226918974 | Borrows=$2664109170 | Util=68.5%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281521624 | Liq=$114082015 | Borrows=$167440747 | Util=59.5%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$416992108 | Liq=$76912015 | Borrows=$340080431 | Util=81.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9473016 ETH | Pooled=9473016 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido"
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receivedAt": "2026-02-18T07:46:58.666Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4594409851",
+      "totalClaimedUSD": "4594166588",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 2,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26640233578"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18966201866"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3895083954 | Liq=$1231235790 | Borrows=$2664089726 | Util=68.4%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281491778 | Liq=$114048789 | Borrows=$167444218 | Util=59.5%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$417590856 | Liq=$77598523 | Borrows=$339992803 | Util=81.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9473087 ETH | Pooled=9473087 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido"
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receivedAt": "2026-02-18T08:31:09.993Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4594409851",
+      "totalClaimedUSD": "4594166588",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 2,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26640233578"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18966201866"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3895083954 | Liq=$1231235790 | Borrows=$2664089726 | Util=68.4%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281491778 | Liq=$114048789 | Borrows=$167444218 | Util=59.5%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$417590856 | Liq=$77598523 | Borrows=$339992803 | Util=81.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9473087 ETH | Pooled=9473087 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido"
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receivedAt": "2026-02-18T08:32:30.258Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4594386296",
+      "totalClaimedUSD": "4594142887",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 2,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26640233578"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18966201866"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3895072427 | Liq=$1230721847 | Borrows=$2664592263 | Util=68.4%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281489465 | Liq=$114038853 | Borrows=$167451849 | Util=59.5%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$417580995 | Liq=$77576815 | Borrows=$340004667 | Util=81.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave"
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9473087 ETH | Pooled=9473087 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido"
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "receivedAt": "2026-02-18T08:37:00.389Z"
   }
 ]

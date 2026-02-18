@@ -1,0 +1,9 @@
+{
+  "network": "sepolia",
+  "ReserveOracleV2": "0x155a5d68f2278d4a9398184871c9b8f62277c857",
+  "EmergencyController": "0x2e1d1a8bfed98bdc46d5846b1815333e3eb42eaa",
+  "forwarder": "0x15fC6ae953E024d975e77382eEeC56A9101f9F88",
+  "reporter": "0xF8A440f0c3912F42dF794983B8164cB6572fCBCC",
+  "linked": true,
+  "deployedAt": "2026-02-18T07:28:38.489Z"
+}
