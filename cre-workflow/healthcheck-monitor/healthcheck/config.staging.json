@@ -1,8 +1,9 @@
 {
   "schedule": "*/60 * * * * *",
-"oracleAddress": "0x155a5d68f2278d4a9398184871c9b8f62277c857",
+  "oracleAddress": "0x71f540d7dac0fc71b6652b1d8aee9012638095ca",
   "chainSelector": "ethereum-testnet-sepolia",
-"discordWebhookUrl": "https://discord.com/api/webhooks/1473271148572704810/m_34uLrjaNJHIQbsZLmmgAK3V9wGZCeaQAF29DROQeSYPQ-JbyvlzqgFqKgICwGinIgv",  "protocols": [
+  "discordWebhookUrl": "https://discord.com/api/webhooks/1473271148572704810/m_34uLrjaNJHIQbsZLmmgAK3V9wGZCeaQAF29DROQeSYPQ-JbyvlzqgFqKgICwGinIgv",
+  "protocols": [
     {
       "name": "Aave V3 USDC (Ethereum)",
       "type": "aave",

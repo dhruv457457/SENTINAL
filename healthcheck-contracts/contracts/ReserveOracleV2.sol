@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "./ISentinalGuard.sol";
+
 /**
  * @title IReceiver - Chainlink CRE Receiver Interface
  */
@@ -12,12 +14,12 @@ interface IReceiver {
  * @title ReserveOracleV2
  * @author SENTINAL — Multi-Chain DeFi Health Monitor
  * @notice Receives DON-signed aggregate health reports from Chainlink CRE,
- *         plus per-protocol solvency data from the SENTINAL backend.
- *         All data is queryable on Etherscan for full transparency.
+ *         plus per-protocol solvency + velocity data from the SENTINAL backend.
  *
- * Architecture:
- *   CRE Workflow (DON-signed) → onReport()          → Aggregate health data
- *   SENTINAL Backend          → submitProtocolData() → Per-protocol details
+ * NEW in this version:
+ *   - Stores per-protocol utilization for velocity detection by CRE workflow
+ *   - Hooks into SentinalGuard for circuit-breaker updates
+ *   - getPreviousUtilizations() — read by CRE as the 15th EVM call
  */
 contract ReserveOracleV2 is IReceiver {
 
@@ -26,24 +28,26 @@ contract ReserveOracleV2 is IReceiver {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     struct HealthReport {
-        uint256 totalReservesUSD;     // Actual reserves backing deposits
-        uint256 totalClaimedUSD;      // Total user deposits claimed
-        uint256 globalRatio;          // Worst solvency ratio (basis points, 10000 = 100%)
-        uint256 riskScore;            // 0-100 risk score
-        uint256 timestamp;            // DON consensus timestamp
-        uint256 checkNumber;          // Sequential check ID
-        uint8   severity;             // 0=HEALTHY, 1=WARNING, 2=CRITICAL
-        bool    anomalyDetected;      // Cross-reference anomaly flag
+        uint256 totalReservesUSD;
+        uint256 totalClaimedUSD;
+        uint256 globalRatio;
+        uint256 riskScore;
+        uint256 timestamp;
+        uint256 checkNumber;
+        uint8   severity;
+        bool    anomalyDetected;
     }
 
     struct ProtocolReport {
-        string  name;                 // e.g. "Aave V3 USDC (Ethereum)"
-        string  protocolType;         // e.g. "aave", "lido", "compound"
-        string  chain;                // e.g. "ethereum-mainnet"
-        uint256 claimed;              // Deposits/shares (USD or ETH depending on type)
-        uint256 actual;               // Actual backing (USD or ETH)
-        uint256 solvencyRatio;        // Basis points (10000 = 100%)
-        uint256 utilization;          // Basis points (8700 = 87%)
+        string  name;
+        string  protocolType;
+        string  chain;
+        uint256 claimed;
+        uint256 actual;
+        uint256 solvencyRatio;
+        uint256 utilization;        // basis points (8700 = 87%)
+        uint256 velocityBps;        // change in utilization since last check (signed stored as uint, see note)
+        bool    velocityNegative;   // true if utilization decreased
         uint256 timestamp;
     }
 
@@ -60,8 +64,9 @@ contract ReserveOracleV2 is IReceiver {
 
     address public owner;
     address public forwarder;
-    address public reporter;              // Backend address authorized to submit protocol data
+    address public reporter;
     address public emergencyController;
+    address public guard;               // NEW: SentinalGuard circuit breaker
 
     // ── Aggregate (DON-signed via CRE) ──────────────
     HealthReport public latestReport;
@@ -69,22 +74,23 @@ contract ReserveOracleV2 is IReceiver {
     mapping(uint256 => HealthReport) public reports;
 
     // ── Per-Protocol ────────────────────────────────
-    // checkNumber => protocol index => ProtocolReport
     mapping(uint256 => mapping(uint256 => ProtocolReport)) public protocolReports;
     mapping(uint256 => uint256) public protocolCountPerCheck;
 
-    // Latest per-protocol data (always up to date)
-    // keccak256(name) => ProtocolReport
+    // keccak256(name) => ProtocolReport (latest)
     mapping(bytes32 => ProtocolReport) public latestProtocolData;
     bytes32[] public trackedProtocols;
     mapping(bytes32 => bool) private protocolTracked;
 
+    // NEW: previous utilization per protocol for velocity calc in CRE workflow
+    // keccak256(name) => utilization in basis points
+    mapping(bytes32 => uint256) public previousUtilization;
+
     // ── Per-Chain ───────────────────────────────────
-    // keccak256(chainName) => ChainStats
     mapping(bytes32 => ChainStats) public chainStats;
     bytes32[] public trackedChains;
     mapping(bytes32 => bool) private chainTracked;
-    mapping(bytes32 => string) public chainNames;      // hash => readable name
+    mapping(bytes32 => string) public chainNames;
 
     // ── Counters ────────────────────────────────────
     uint256 public totalChecks;
@@ -93,6 +99,11 @@ contract ReserveOracleV2 is IReceiver {
     uint256 public totalAnomalies;
     uint256 public highestRiskScore;
     uint256 public highestRiskCheckNumber;
+
+    // NEW: velocity alert counters
+    uint256 public totalVelocityAlerts;
+    uint256 public highestVelocityBps;
+    string  public highestVelocityProtocol;
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // EVENTS
@@ -120,6 +131,21 @@ contract ReserveOracleV2 is IReceiver {
         uint256 solvencyRatio
     );
 
+    // NEW
+    event VelocityAlert(
+        uint256 indexed checkNumber,
+        string  name,
+        uint256 velocityBps,
+        bool    increasing,
+        uint256 currentUtilization
+    );
+
+    event GuardUpdated(
+        uint256 indexed checkNumber,
+        uint8   severity,
+        uint256 protocolsPaused
+    );
+
     event EmergencyTriggered(
         uint256 indexed checkNumber,
         uint256 riskScore,
@@ -131,6 +157,13 @@ contract ReserveOracleV2 is IReceiver {
         uint8   previousSeverity,
         uint8   newSeverity
     );
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // CONSTANTS
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    /// @notice Velocity above this triggers an alert (5% per cycle in bps)
+    uint256 public constant VELOCITY_ALERT_THRESHOLD = 500;
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // MODIFIERS
@@ -158,7 +191,7 @@ contract ReserveOracleV2 is IReceiver {
     constructor(address _forwarder) {
         owner = msg.sender;
         forwarder = _forwarder;
-        reporter = msg.sender;  // Owner is default reporter
+        reporter = msg.sender;
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -192,20 +225,13 @@ contract ReserveOracleV2 is IReceiver {
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // BACKEND ENTRY POINT — Per-Protocol Details
+    // BACKEND ENTRY POINT — Per-Protocol + Velocity Data
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     /**
-     * @notice Submit per-protocol solvency data for a given check
-     * @dev Called by the SENTINAL backend after each CRE workflow run
-     * @param checkNumber Must match an existing aggregate report
-     * @param names       Protocol display names
-     * @param types       Protocol types (aave, lido, compound, erc4626)
-     * @param chains      Chain selector names
-     * @param claimed     Claimed deposits per protocol
-     * @param actual      Actual reserves per protocol
-     * @param solvencyRatios  Solvency in basis points per protocol
-     * @param utilizations    Utilization in basis points per protocol
+     * @notice Submit per-protocol solvency + velocity data.
+     * @param velocityBps        Utilization change magnitude per protocol (basis points)
+     * @param velocityNegative   True if utilization decreased (array parallel to names)
      */
     function submitProtocolData(
         uint256   checkNumber,
@@ -215,7 +241,9 @@ contract ReserveOracleV2 is IReceiver {
         uint256[] calldata claimed,
         uint256[] calldata actual,
         uint256[] calldata solvencyRatios,
-        uint256[] calldata utilizations
+        uint256[] calldata utilizations,
+        uint256[] calldata velocityBps,
+        bool[]    calldata velocityNegative
     ) external onlyReporter {
         uint256 count = names.length;
         require(count > 0, "Empty data");
@@ -225,47 +253,54 @@ contract ReserveOracleV2 is IReceiver {
             count == claimed.length &&
             count == actual.length &&
             count == solvencyRatios.length &&
-            count == utilizations.length,
+            count == utilizations.length &&
+            count == velocityBps.length &&
+            count == velocityNegative.length,
             "Array length mismatch"
         );
 
         uint256 ts = block.timestamp;
-        uint256 chainCount = 0;
+        uint256 protocolsPaused = 0;
 
         for (uint256 i = 0; i < count; i++) {
+            bytes32 nameHash = keccak256(bytes(names[i]));
+
             ProtocolReport memory pr = ProtocolReport({
-                name: names[i],
-                protocolType: types[i],
-                chain: chains[i],
-                claimed: claimed[i],
-                actual: actual[i],
-                solvencyRatio: solvencyRatios[i],
-                utilization: utilizations[i],
-                timestamp: ts
+                name:            names[i],
+                protocolType:    types[i],
+                chain:           chains[i],
+                claimed:         claimed[i],
+                actual:          actual[i],
+                solvencyRatio:   solvencyRatios[i],
+                utilization:     utilizations[i],
+                velocityBps:     velocityBps[i],
+                velocityNegative: velocityNegative[i],
+                timestamp:       ts
             });
 
             // Store per-check
             protocolReports[checkNumber][i] = pr;
 
-            // Update latest per-protocol
-            bytes32 nameHash = keccak256(bytes(names[i]));
+            // Update latest
             latestProtocolData[nameHash] = pr;
+
+            // Store current utilization as "previous" for NEXT check
+            previousUtilization[nameHash] = utilizations[i];
+
+            // Track protocol
             if (!protocolTracked[nameHash]) {
                 trackedProtocols.push(nameHash);
                 protocolTracked[nameHash] = true;
             }
 
-            // Update chain stats
+            // Chain stats
             bytes32 chainHash = keccak256(bytes(chains[i]));
             if (!chainTracked[chainHash]) {
                 trackedChains.push(chainHash);
                 chainTracked[chainHash] = true;
                 chainNames[chainHash] = chains[i];
-                chainCount++;
             }
-
             ChainStats storage cs = chainStats[chainHash];
-            // Reset if this is a new check cycle
             if (cs.lastUpdated < ts - 1) {
                 cs.totalReserves = 0;
                 cs.totalClaimed = 0;
@@ -276,12 +311,64 @@ contract ReserveOracleV2 is IReceiver {
             cs.protocolCount++;
             cs.lastUpdated = ts;
 
+            // Velocity alert
+            if (velocityBps[i] >= VELOCITY_ALERT_THRESHOLD) {
+                totalVelocityAlerts++;
+                if (velocityBps[i] > highestVelocityBps) {
+                    highestVelocityBps = velocityBps[i];
+                    highestVelocityProtocol = names[i];
+                }
+                emit VelocityAlert(
+                    checkNumber,
+                    names[i],
+                    velocityBps[i],
+                    !velocityNegative[i],
+                    utilizations[i]
+                );
+            }
+
+            // Update guard per-protocol
+            if (guard != address(0)) {
+                try ISentinalGuard(guard).updateProtocolStatus(
+                    names[i],
+                    solvencyRatios[i],
+                    checkNumber
+                ) {
+                    if (solvencyRatios[i] < 9000) protocolsPaused++;
+                } catch {}
+            }
+
             emit ProtocolSolvencyUpdate(checkNumber, names[i], chains[i], solvencyRatios[i]);
         }
 
         protocolCountPerCheck[checkNumber] = count;
 
+        if (protocolsPaused > 0) {
+            emit GuardUpdated(checkNumber, latestReport.severity, protocolsPaused);
+        }
+
         emit ProtocolDataSubmitted(checkNumber, count, trackedChains.length);
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // NEW: Velocity Read — Called by CRE as call #15
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    /**
+     * @notice Returns stored utilization values for given protocol names.
+     *         CRE workflow calls this as its 15th EVM call to compute velocity.
+     * @param names Array of SENTINAL protocol names (same order as config.protocols)
+     * @return utils Array of previous utilization values in basis points
+     */
+    function getPreviousUtilizations(string[] calldata names)
+        external
+        view
+        returns (uint256[] memory utils)
+    {
+        utils = new uint256[](names.length);
+        for (uint256 i = 0; i < names.length; i++) {
+            utils[i] = previousUtilization[keccak256(bytes(names[i]))];
+        }
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -380,12 +467,9 @@ contract ReserveOracleV2 is IReceiver {
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // VIEW — Dashboard Helpers
+    // VIEW — Dashboard
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    /**
-     * @notice Single call to get everything a dashboard needs
-     */
     function getDashboardData() external view returns (
         HealthReport memory latest,
         uint256 checks,
@@ -401,7 +485,6 @@ contract ReserveOracleV2 is IReceiver {
         for (uint256 i = 0; i < pCount; i++) {
             allProtocols[i] = latestProtocolData[trackedProtocols[i]];
         }
-
         return (
             latestReport,
             totalChecks,
@@ -414,8 +497,30 @@ contract ReserveOracleV2 is IReceiver {
         );
     }
 
+    /**
+     * @notice Velocity-focused dashboard view.
+     */
+    function getVelocityStats() external view returns (
+        uint256 totalAlerts,
+        uint256 peakVelocityBps,
+        string memory peakProtocol,
+        ProtocolReport[] memory latestData
+    ) {
+        uint256 pCount = trackedProtocols.length;
+        ProtocolReport[] memory allProtocols = new ProtocolReport[](pCount);
+        for (uint256 i = 0; i < pCount; i++) {
+            allProtocols[i] = latestProtocolData[trackedProtocols[i]];
+        }
+        return (
+            totalVelocityAlerts,
+            highestVelocityBps,
+            highestVelocityProtocol,
+            allProtocols
+        );
+    }
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // TESTING — Simulation functions
+    // TESTING — Simulation
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     function simulateHealthy() external {
@@ -473,6 +578,11 @@ contract ReserveOracleV2 is IReceiver {
         emergencyController = _controller;
     }
 
+    /// @notice NEW — Link SentinalGuard for circuit breaker updates
+    function setGuard(address _guard) external onlyOwner {
+        guard = _guard;
+    }
+
     function transferOwnership(address newOwner) external onlyOwner {
         require(newOwner != address(0), "Zero address");
         owner = newOwner;
@@ -483,7 +593,6 @@ contract ReserveOracleV2 is IReceiver {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     function _processReport(HealthReport memory report) internal {
-        // Track severity changes
         if (totalChecks > 0 && latestReport.severity != report.severity) {
             emit SeverityChanged(report.checkNumber, latestReport.severity, report.severity);
         }
@@ -500,6 +609,11 @@ contract ReserveOracleV2 is IReceiver {
         if (report.riskScore > highestRiskScore) {
             highestRiskScore = report.riskScore;
             highestRiskCheckNumber = report.checkNumber;
+        }
+
+        // Update SentinalGuard global status
+        if (guard != address(0)) {
+            try ISentinalGuard(guard).updateGlobalStatus(report.severity) {} catch {}
         }
 
         emit ReportSubmitted(
@@ -525,13 +639,8 @@ contract ReserveOracleV2 is IReceiver {
                     report.globalRatio
                 )
             );
-
             if (success) {
-                emit EmergencyTriggered(
-                    report.checkNumber,
-                    report.riskScore,
-                    "Critical risk detected"
-                );
+                emit EmergencyTriggered(report.checkNumber, report.riskScore, "Critical risk detected");
             }
         }
     }

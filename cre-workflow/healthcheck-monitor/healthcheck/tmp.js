@@ -16799,8 +16799,16 @@ var RESERVE_ORACLE_ABI = [
     outputs: [{ name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function"
+  },
+  {
+    inputs: [{ name: "names", type: "string[]" }],
+    name: "getPreviousUtilizations",
+    outputs: [{ name: "utils", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function"
   }
 ];
+var VELOCITY_ALERT_THRESHOLD = 500;
 function decodeBody(body) {
   if (typeof body === "string")
     return body;
@@ -16867,7 +16875,7 @@ function readAave(runtime2, client, protocol) {
   const claimedUSD = deposits / d;
   const actualUSD = (liquidity + borrows) / d;
   const ratio = Number(claimedUSD) > 0 ? Number(actualUSD) * 1e4 / Number(claimedUSD) : 1e4;
-  const util3 = Number(claimedUSD) > 0 ? Number(borrows / d) * 100 / Number(claimedUSD) : 0;
+  const utilizationBps = Number(claimedUSD) > 0 ? Math.floor(Number(borrows / d) * 1e4 / Number(claimedUSD)) : 0;
   return {
     name: protocol.name,
     type: "aave",
@@ -16875,7 +16883,8 @@ function readAave(runtime2, client, protocol) {
     claimed: claimedUSD,
     actual: actualUSD,
     solvencyRatio: ratio,
-    details: `Deposits=$${claimedUSD} | Liq=$${liquidity / d} | Borrows=$${borrows / d} | Util=${util3.toFixed(1)}%`
+    utilizationBps,
+    details: `Deposits=$${claimedUSD} | Liq=$${liquidity / d} | Borrows=$${borrows / d} | Util=${(utilizationBps / 100).toFixed(1)}%`
   };
 }
 function readCompound(runtime2, client, protocol) {
@@ -16901,7 +16910,7 @@ function readCompound(runtime2, client, protocol) {
   const claimedUSD = totalSupply / d;
   const actualUSD = (balance + totalBorrow) / d;
   const ratio = Number(claimedUSD) > 0 ? Number(actualUSD) * 1e4 / Number(claimedUSD) : 1e4;
-  const util3 = Number(claimedUSD) > 0 ? Number(totalBorrow / d) * 100 / Number(claimedUSD) : 0;
+  const utilizationBps = Number(claimedUSD) > 0 ? Math.floor(Number(totalBorrow / d) * 1e4 / Number(claimedUSD)) : 0;
   return {
     name: protocol.name,
     type: "compound",
@@ -16909,7 +16918,8 @@ function readCompound(runtime2, client, protocol) {
     claimed: claimedUSD,
     actual: actualUSD,
     solvencyRatio: ratio,
-    details: `Supply=$${claimedUSD} | Liq=$${balance / d} | Borrows=$${totalBorrow / d} | Util=${util3.toFixed(1)}%`
+    utilizationBps,
+    details: `Supply=$${claimedUSD} | Liq=$${balance / d} | Borrows=$${totalBorrow / d} | Util=${(utilizationBps / 100).toFixed(1)}%`
   };
 }
 function readLido(runtime2, client, protocol) {
@@ -16929,6 +16939,7 @@ function readLido(runtime2, client, protocol) {
   const claimedETH = totalStETH / d;
   const actualETH = pooledEther / d;
   const ratio = Number(claimedETH) > 0 ? Number(actualETH) * 1e4 / Number(claimedETH) : 1e4;
+  const utilizationBps = ratio >= 1e4 ? 0 : Math.floor(1e4 - ratio);
   return {
     name: protocol.name,
     type: "lido",
@@ -16936,6 +16947,7 @@ function readLido(runtime2, client, protocol) {
     claimed: claimedETH,
     actual: actualETH,
     solvencyRatio: ratio,
+    utilizationBps,
     details: `stETH=${claimedETH} ETH | Pooled=${actualETH} ETH | Backing=${(ratio / 100).toFixed(2)}%`
   };
 }
@@ -16963,6 +16975,7 @@ function readERC4626(runtime2, client, protocol) {
     claimed: claimedUSD,
     actual: actualUSD,
     solvencyRatio: ratio,
+    utilizationBps: 0,
     details: `Shares=$${claimedUSD} | Assets=$${actualUSD} | Backing=${(ratio / 100).toFixed(2)}%`
   };
 }
@@ -16979,6 +16992,24 @@ function readProtocol(runtime2, client, protocol) {
     default:
       throw new Error(`Unknown protocol type: ${protocol.type}`);
   }
+}
+function calculateVelocities(results, previousUtils, isFirstRun) {
+  return results.map((result, i2) => {
+    const currentBps = result.utilizationBps;
+    const prevBps = Number(previousUtils[i2]);
+    const delta = currentBps - prevBps;
+    const velocityBps = isFirstRun ? 0 : Math.abs(delta);
+    const velocityNegative = delta < 0;
+    const isAlert = !isFirstRun && velocityBps >= VELOCITY_ALERT_THRESHOLD;
+    return {
+      name: result.name,
+      currentUtilBps: currentBps,
+      prevUtilBps: prevBps,
+      velocityBps,
+      velocityNegative,
+      isAlert
+    };
+  });
 }
 function createTVLFetcher(slug) {
   return (nodeRuntime) => {
@@ -17017,31 +17048,38 @@ function createDiscordAlerter(webhookUrl, data) {
       return 0n;
     const httpClient = new ClientCapability2;
     const color = data.riskScore > 0 ? 15158332 : 3066993;
+    let velocityFieldValue;
+    if (data.isFirstRun) {
+      velocityFieldValue = "ℹ️ Baseline seeded — velocity active from next check";
+    } else if (data.velocityAlerts.length > 0) {
+      velocityFieldValue = data.velocityAlerts.map((v) => `⚡ ${v.name}: +${(v.velocityBps / 100).toFixed(1)}% → ${(v.currentUtilBps / 100).toFixed(1)}% util`).join(`
+`);
+    } else {
+      velocityFieldValue = "✅ No velocity spikes";
+    }
     const payload = JSON.stringify({
       username: "SENTINAL Guardian",
-      embeds: [
-        {
-          title: `Health Check #${data.checkNumber} Complete`,
-          color,
-          fields: [
-            { name: "Status", value: data.severity, inline: true },
-            { name: "Risk Score", value: `${data.riskScore}/100`, inline: true },
-            { name: "Coverage", value: `${data.protocols} Protocols on ${data.chains} Chains`, inline: false },
-            { name: "Aggregate Reserves", value: `$${data.totalActualUSD}`, inline: true },
-            { name: "Worst Solvency", value: `${data.worstSolvency}% (${data.worstProtocol})`, inline: true },
-            { name: "Transaction", value: `[View on Etherscan](https://sepolia.etherscan.io/tx/${data.txHash})`, inline: false }
-          ],
-          footer: { text: "Powered by Chainlink CRE | SENTINAL" }
-        }
-      ]
+      embeds: [{
+        title: `Health Check #${data.checkNumber} — ${data.severity}`,
+        color,
+        fields: [
+          { name: "Status", value: data.severity, inline: true },
+          { name: "Risk Score", value: `${data.riskScore}/100`, inline: true },
+          { name: "Coverage", value: `${data.protocols} Protocols on ${data.chains} Chains`, inline: false },
+          { name: "Aggregate Reserves", value: `$${data.totalActualUSD}`, inline: true },
+          { name: "Worst Solvency", value: `${data.worstSolvency}% (${data.worstProtocol})`, inline: true },
+          { name: "⚡ Velocity", value: velocityFieldValue, inline: false },
+          { name: "Transaction", value: `[View on Etherscan](https://sepolia.etherscan.io/tx/${data.txHash})`, inline: false }
+        ],
+        footer: { text: "Powered by Chainlink CRE | SENTINAL" }
+      }]
     });
-    const encoded = toBase64(payload);
     try {
       httpClient.sendRequest(nodeRuntime, {
         url: webhookUrl,
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: encoded
+        body: toBase64(payload)
       }).result();
       return 1n;
     } catch {
@@ -17060,10 +17098,11 @@ function healthCheckWorkflow(runtime2, payload) {
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   runtime2.log("\uD83D\uDCCB Capabilities: Cron | EVM Read | HTTP | Consensus | EVM Write | DON Time");
   runtime2.log(`\uD83D\uDCCA Monitoring ${config.protocols.length} protocols across ${chainSet.length} chains`);
+  runtime2.log(`⚡ Velocity Detection: ENABLED (threshold: ${VELOCITY_ALERT_THRESHOLD / 100}% per cycle)`);
   runtime2.log(`\uD83D\uDD17 Chains: ${chainSet.join(", ")}`);
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE1 STEP 1: Onchain Data [EVM Read — Multi-Chain]");
+  runtime2.log("\uD83D\uDCE1 STEP 1: Onchain Data [EVM Read — Multi-Chain] (Calls 1-14)");
   const results = [];
   for (const protocol of config.protocols) {
     runtime2.log(`   ┌─ ${protocol.name} [${protocol.chainName}]`);
@@ -17071,7 +17110,7 @@ function healthCheckWorkflow(runtime2, payload) {
     const result = readProtocol(runtime2, client, protocol);
     results.push(result);
     runtime2.log(`   ├─ ${result.details}`);
-    runtime2.log(`   └─ Solvency: ${(result.solvencyRatio / 100).toFixed(2)}%`);
+    runtime2.log(`   └─ Solvency: ${(result.solvencyRatio / 100).toFixed(2)}% | Util: ${(result.utilizationBps / 100).toFixed(1)}%`);
     runtime2.log("");
   }
   runtime2.log("\uD83C\uDF10 STEP 2: Offchain Data [HTTP + DON Consensus]");
@@ -17089,76 +17128,7 @@ function healthCheckWorkflow(runtime2, payload) {
     runtime2.log(`   ✅ ${slug}: $${tvl.toString()}`);
   }
   runtime2.log("");
-  runtime2.log("\uD83D\uDD0D STEP 3: Cross-Reference Analysis");
-  let crossRefRisk = 0;
-  for (const result of results) {
-    const protocol = config.protocols.filter((p) => p.name === result.name)[0];
-    const offchainTVL = tvlMap[protocol.defiLlamaSlug];
-    if (offchainTVL && Number(offchainTVL) > 0 && Number(result.claimed) > 0) {
-      if (result.type === "lido") {
-        runtime2.log(`   ${result.name}: Solvency=${(result.solvencyRatio / 100).toFixed(2)}% | TVL=$${offchainTVL}`);
-        if (result.solvencyRatio < 9900) {
-          crossRefRisk += 20;
-          runtime2.log(`   ⚠️  Lido backing below 99%`);
-        } else {
-          runtime2.log(`   ✅ Lido backing healthy`);
-        }
-        continue;
-      }
-      const share = Number(result.claimed) / Number(offchainTVL) * 100;
-      runtime2.log(`   ${result.name}: Onchain=$${result.claimed} | TVL=$${offchainTVL} | Share=${share.toFixed(1)}%`);
-      if (share < 0.5 || share > 200) {
-        crossRefRisk += 15;
-        runtime2.log(`   ⚠️  Unusual ratio`);
-      } else {
-        runtime2.log(`   ✅ Within range`);
-      }
-    }
-  }
-  runtime2.log("");
-  runtime2.log("\uD83C\uDFAF STEP 4: Risk Assessment");
-  let riskScore = 0;
-  let worstSolvency = 1e4;
-  let worstProtocol = "";
-  for (const result of results) {
-    if (result.solvencyRatio < worstSolvency) {
-      worstSolvency = result.solvencyRatio;
-      worstProtocol = result.name;
-    }
-    if (result.solvencyRatio < 9500)
-      riskScore += 15;
-    if (result.solvencyRatio < 9000)
-      riskScore += 10;
-    if (result.solvencyRatio < 8000)
-      riskScore += 10;
-  }
-  riskScore += crossRefRisk;
-  if (riskScore > 100)
-    riskScore = 100;
-  const anomalyDetected = crossRefRisk > 0 || worstSolvency < 9500;
-  let severity;
-  let statusText;
-  if (riskScore < 30 && worstSolvency >= 9500) {
-    severity = 0;
-    statusText = "HEALTHY";
-    runtime2.log("   ✅ Status: HEALTHY");
-  } else if (riskScore < 60 && worstSolvency >= 9000) {
-    severity = 1;
-    statusText = "WARNING";
-    runtime2.log("   ⚠️  Status: WARNING");
-  } else {
-    severity = 2;
-    statusText = "CRITICAL";
-    runtime2.log("   \uD83D\uDEA8 Status: CRITICAL");
-  }
-  runtime2.log(`   Risk Score:      ${riskScore}/100`);
-  runtime2.log(`   Worst Protocol:  ${worstProtocol} (${(worstSolvency / 100).toFixed(2)}%)`);
-  runtime2.log(`   Anomaly:         ${anomalyDetected ? "YES \uD83D\uDD34" : "NO ✅"}`);
-  runtime2.log(`   Chains:          ${chainSet.length}`);
-  runtime2.log(`   Protocols:       ${results.length}`);
-  runtime2.log(`   Data Sources:    ${results.length} onchain + ${slugs.length} offchain`);
-  runtime2.log("");
-  runtime2.log("\uD83D\uDCE1 STEP 5: Read Oracle State [Sepolia]");
+  runtime2.log("\uD83D\uDCE1 STEP 3: Read Oracle State + Previous Utilizations [Call 15 — Sepolia]");
   const sepoliaClient = getClient(config.chainSelector, true);
   const checksCall = encodeFunctionData({
     abi: RESERVE_ORACLE_ABI,
@@ -17188,9 +17158,150 @@ function healthCheckWorkflow(runtime2, payload) {
   } catch {
     runtime2.log("   ⚠️  Could not read totalChecks");
   }
-  runtime2.log(`   ✅ Current: ${currentChecks} → Next: #${checkNumber}`);
+  runtime2.log(`   ✅ Current checks: ${currentChecks} → Next: #${checkNumber}`);
+  runtime2.log("   \uD83D\uDCCA Reading previous utilizations (Call 15)...");
+  const protocolNames = config.protocols.map((p) => p.name);
+  let previousUtils = config.protocols.map(() => 0n);
+  let isFirstRun = true;
+  try {
+    const prevUtilCall = encodeFunctionData({
+      abi: RESERVE_ORACLE_ABI,
+      functionName: "getPreviousUtilizations",
+      args: [protocolNames]
+    });
+    const prevUtilResult = evmCall(sepoliaClient, runtime2, config.oracleAddress, bytesToHex(new Uint8Array(Buffer.from(prevUtilCall.slice(2), "hex"))));
+    const decoded = decodeFunctionResult({
+      abi: RESERVE_ORACLE_ABI,
+      functionName: "getPreviousUtilizations",
+      data: bytesToHex(prevUtilResult)
+    });
+    if (decoded.length === protocolNames.length) {
+      previousUtils = decoded;
+      isFirstRun = decoded.every((v) => v === 0n);
+      if (isFirstRun) {
+        runtime2.log("   ℹ️  First run detected — seeding baseline, velocity scoring suppressed");
+      } else {
+        runtime2.log(`   ✅ Previous utils loaded (${decoded.length} protocols)`);
+        for (let i2 = 0;i2 < decoded.length; i2++) {
+          runtime2.log(`      ${protocolNames[i2]}: ${(Number(decoded[i2]) / 100).toFixed(1)}%`);
+        }
+      }
+    }
+  } catch {
+    runtime2.log("   ⚠️  Could not read previous utilizations — treating as first run");
+    isFirstRun = true;
+  }
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE4 STEP 6: Submit Report [EVM Write + DON Time]");
+  runtime2.log(`⚡ STEP 4: Velocity Detection${isFirstRun ? " [BASELINE RUN — no scoring]" : ""}`);
+  const velocities = calculateVelocities(results, previousUtils, isFirstRun);
+  const velocityAlerts = velocities.filter((v) => v.isAlert);
+  for (const v of velocities) {
+    if (isFirstRun) {
+      runtime2.log(`   \uD83D\uDCCC ${v.name}: Util=${(v.currentUtilBps / 100).toFixed(1)}% (baseline stored)`);
+    } else {
+      const direction = v.velocityNegative ? "▼" : "▲";
+      const tag = v.isAlert ? "⚡ ALERT" : "✅";
+      runtime2.log(`   ${tag} ${v.name}:`);
+      runtime2.log(`      Util: ${(v.prevUtilBps / 100).toFixed(1)}% → ${(v.currentUtilBps / 100).toFixed(1)}% ${direction}`);
+      runtime2.log(`      Velocity: ${(v.velocityBps / 100).toFixed(1)}%/cycle`);
+    }
+  }
+  if (!isFirstRun) {
+    if (velocityAlerts.length > 0) {
+      runtime2.log(`   \uD83D\uDEA8 ${velocityAlerts.length} velocity alert(s) detected!`);
+    } else {
+      runtime2.log("   ✅ All utilization rates stable");
+    }
+  }
+  runtime2.log("");
+  runtime2.log("\uD83D\uDD0D STEP 5: Cross-Reference Analysis");
+  let crossRefRisk = 0;
+  for (const result of results) {
+    const protocol = config.protocols.filter((p) => p.name === result.name)[0];
+    const offchainTVL = tvlMap[protocol.defiLlamaSlug];
+    if (offchainTVL && Number(offchainTVL) > 0 && Number(result.claimed) > 0) {
+      if (result.type === "lido") {
+        runtime2.log(`   ${result.name}: Solvency=${(result.solvencyRatio / 100).toFixed(2)}% | TVL=$${offchainTVL}`);
+        if (result.solvencyRatio < 9900) {
+          crossRefRisk += 20;
+          runtime2.log(`   ⚠️  Lido backing below 99%`);
+        } else {
+          runtime2.log(`   ✅ Lido backing healthy`);
+        }
+        continue;
+      }
+      const share = Number(result.claimed) / Number(offchainTVL) * 100;
+      runtime2.log(`   ${result.name}: Onchain=$${result.claimed} | TVL=$${offchainTVL} | Share=${share.toFixed(1)}%`);
+      if (share < 0.5 || share > 200) {
+        crossRefRisk += 15;
+        runtime2.log(`   ⚠️  Unusual ratio`);
+      } else {
+        runtime2.log(`   ✅ Within range`);
+      }
+    }
+  }
+  runtime2.log("");
+  runtime2.log("\uD83C\uDFAF STEP 6: Risk Assessment [Solvency + Velocity + CrossRef]");
+  let riskScore = 0;
+  let worstSolvency = 1e4;
+  let worstProtocol = "";
+  for (const result of results) {
+    if (result.solvencyRatio < worstSolvency) {
+      worstSolvency = result.solvencyRatio;
+      worstProtocol = result.name;
+    }
+    if (result.solvencyRatio < 9500)
+      riskScore += 15;
+    if (result.solvencyRatio < 9000)
+      riskScore += 10;
+    if (result.solvencyRatio < 8000)
+      riskScore += 10;
+  }
+  if (!isFirstRun) {
+    for (const v of velocities) {
+      if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD && !v.velocityNegative) {
+        riskScore += 15;
+        runtime2.log(`   ⚡ Velocity risk: ${v.name} +${(v.velocityBps / 100).toFixed(1)}% → +15 risk`);
+        if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD * 3) {
+          riskScore += 20;
+          runtime2.log(`   \uD83D\uDEA8 EXTREME velocity: ${v.name} → +20 additional risk`);
+        }
+      } else if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD && v.velocityNegative) {
+        riskScore += 10;
+        runtime2.log(`   ⚡ Rapid withdrawal: ${v.name} -${(v.velocityBps / 100).toFixed(1)}% → +10 risk`);
+      }
+    }
+  } else {
+    runtime2.log("   ℹ️  Velocity scoring skipped (first run — no baseline)");
+  }
+  riskScore += crossRefRisk;
+  if (riskScore > 100)
+    riskScore = 100;
+  const anomalyDetected = crossRefRisk > 0 || worstSolvency < 9500 || !isFirstRun && velocityAlerts.length > 0;
+  let severity;
+  let statusText;
+  if (riskScore < 30 && worstSolvency >= 9500) {
+    severity = 0;
+    statusText = "HEALTHY";
+    runtime2.log("   ✅ Status: HEALTHY");
+  } else if (riskScore < 60 && worstSolvency >= 9000) {
+    severity = 1;
+    statusText = "WARNING";
+    runtime2.log("   ⚠️  Status: WARNING");
+  } else {
+    severity = 2;
+    statusText = "CRITICAL";
+    runtime2.log("   \uD83D\uDEA8 Status: CRITICAL");
+  }
+  runtime2.log(`   Risk Score:      ${riskScore}/100`);
+  runtime2.log(`   Worst Protocol:  ${worstProtocol} (${(worstSolvency / 100).toFixed(2)}%)`);
+  runtime2.log(`   Velocity Alerts: ${isFirstRun ? "N/A (first run)" : velocityAlerts.length}`);
+  runtime2.log(`   Anomaly:         ${anomalyDetected ? "YES \uD83D\uDD34" : "NO ✅"}`);
+  runtime2.log(`   Chains:          ${chainSet.length}`);
+  runtime2.log(`   Protocols:       ${results.length}`);
+  runtime2.log(`   First Run:       ${isFirstRun}`);
+  runtime2.log("");
+  runtime2.log("\uD83D\uDCE4 STEP 7: Submit Report [EVM Write + DON Time]");
   const nowSeconds = BigInt(Math.floor(runtime2.now() / 1000));
   let totalClaimedUSD = 0n;
   let totalActualUSD = 0n;
@@ -17217,7 +17328,7 @@ function healthCheckWorkflow(runtime2, payload) {
     signingAlgo: "ecdsa",
     hashingAlgo: "keccak256"
   }).result();
-  runtime2.log("   \uD83D\uDCE4 Submitting to ReserveOracle on Sepolia...");
+  runtime2.log("   \uD83D\uDCE4 Submitting to ReserveOracleV2 on Sepolia...");
   const writeResult = sepoliaClient.writeReport(runtime2, {
     receiver: config.oracleAddress,
     report: reportResponse,
@@ -17226,7 +17337,7 @@ function healthCheckWorkflow(runtime2, payload) {
   const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
   if (config.discordWebhookUrl) {
     runtime2.log("");
-    runtime2.log("\uD83D\uDD14 STEP 7: Discord Alert [HTTP POST]");
+    runtime2.log("\uD83D\uDD14 STEP 8: Discord Alert [HTTP POST]");
     const alerter = createDiscordAlerter(config.discordWebhookUrl, {
       checkNumber,
       riskScore,
@@ -17236,14 +17347,16 @@ function healthCheckWorkflow(runtime2, payload) {
       totalActualUSD: totalActualUSD.toString(),
       worstSolvency: (worstSolvency / 100).toFixed(2),
       worstProtocol,
-      txHash
+      txHash,
+      isFirstRun,
+      velocityAlerts: velocityAlerts.map((v) => ({
+        name: v.name,
+        velocityBps: v.velocityBps,
+        currentUtilBps: v.currentUtilBps
+      }))
     });
     const alertResult = runtime2.runInNodeMode(alerter, consensusMedianAggregation())().result();
-    if (alertResult > 0n) {
-      runtime2.log("   ✅ Alert sent to Discord");
-    } else {
-      runtime2.log("   ❌ Alert failed");
-    }
+    runtime2.log(alertResult > 0n ? "   ✅ Alert sent to Discord" : "   ❌ Alert failed");
   }
   runtime2.log("");
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -17251,11 +17364,14 @@ function healthCheckWorkflow(runtime2, payload) {
   runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   for (const r of results) {
     const emoji = r.solvencyRatio >= 9500 ? "✅" : r.solvencyRatio >= 9000 ? "⚠️" : "\uD83D\uDEA8";
-    runtime2.log(`   ${emoji} ${r.name}: ${(r.solvencyRatio / 100).toFixed(2)}%`);
+    const v = velocities.find((x) => x.name === r.name);
+    const velStr = !isFirstRun && v && v.isAlert ? ` ⚡+${(v.velocityBps / 100).toFixed(1)}%` : "";
+    runtime2.log(`   ${emoji} ${r.name}: ${(r.solvencyRatio / 100).toFixed(2)}%${velStr}`);
   }
   runtime2.log(`   \uD83D\uDD17 Chains:     ${chainSet.length} (${chainSet.join(", ")})`);
   runtime2.log(`   \uD83D\uDCCA Protocols:  ${results.length}`);
   runtime2.log(`   \uD83D\uDCB0 Reserves:   $${totalActualUSD}`);
+  runtime2.log(`   ⚡ Velocity:   ${isFirstRun ? "baseline seeded" : `${velocityAlerts.length} alert(s)`}`);
   runtime2.log(`   Risk:          ${riskScore}/100 — ${statusText}`);
   runtime2.log(`   Check #:       ${checkNumber}`);
   runtime2.log(`   Tx:            ${txHash}`);
@@ -17263,12 +17379,17 @@ function healthCheckWorkflow(runtime2, payload) {
   return {
     success: true,
     checkNumber,
+    isFirstRun,
     chains: chainSet,
-    protocols: results.map((r) => ({
+    protocols: results.map((r, i2) => ({
       name: r.name,
       type: r.type,
       chain: r.chain,
       solvency: (r.solvencyRatio / 100).toFixed(2),
+      utilizationBps: r.utilizationBps,
+      velocityBps: isFirstRun ? 0 : velocities[i2].velocityBps,
+      velocityNegative: velocities[i2].velocityNegative,
+      velocityAlert: isFirstRun ? false : velocities[i2].isAlert,
       details: r.details
     })),
     offchain: Object.keys(tvlMap).map((slug) => ({
@@ -17281,6 +17402,13 @@ function healthCheckWorkflow(runtime2, payload) {
       worstSolvency: (worstSolvency / 100).toFixed(2),
       worstProtocol
     },
+    velocityAlerts: isFirstRun ? [] : velocityAlerts.map((v) => ({
+      name: v.name,
+      velocityBps: v.velocityBps,
+      currentUtilBps: v.currentUtilBps,
+      prevUtilBps: v.prevUtilBps,
+      velocityNegative: v.velocityNegative
+    })),
     riskScore,
     severity: statusText,
     anomalyDetected,

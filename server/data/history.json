@@ -1198,5 +1198,83 @@
     "success": true,
     "txHash": "0x813848d2b599ce4e4f631c5e99f71dc96eea7d50e079b75f5c144abf2358925c",
     "receivedAt": "2026-02-18T09:23:38.788Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4576842531",
+      "totalClaimedUSD": "4576512751",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 6,
+    "isFirstRun": true,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "25877122574"
+      },
+      {
+        "slug": "lido",
+        "tvl": "18700645429"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3888199918 | Liq=$1256409506 | Borrows=$2632119014 | Util=67.7%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.01",
+        "type": "aave",
+        "utilizationBps": 6769,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$282698551 | Liq=$119031214 | Borrows=$163667240 | Util=57.9%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5789,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$405614282 | Liq=$84354087 | Borrows=$321261469 | Util=79.2%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7920,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9470702 ETH | Pooled=9470702 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xd992384801da29d176a4aab66cfe0fd6d30099d75d0aacbc4c2a5469bbe0dcd9",
+    "velocityAlerts": [],
+    "receivedAt": "2026-02-21T11:53:16.698Z"
   }
 ]

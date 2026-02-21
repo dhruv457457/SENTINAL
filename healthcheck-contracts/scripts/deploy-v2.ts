@@ -41,14 +41,21 @@ async function checkBalance(publicClient: any, address: string) {
 }
 
 function saveProgress(data: any) {
-    writeFileSync("deployed-addresses-v2.json", JSON.stringify(data, null, 2));
+    writeFileSync("deployed-addresses-v3.json", JSON.stringify(data, null, 2));
+}
+
+function loadProgress(): any {
+    try {
+        return JSON.parse(readFileSync("deployed-addresses-v3.json", "utf8"));
+    } catch {
+        return {};
+    }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONFIG
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// Chainlink KeystoneForwarder on Sepolia
 const KEYSTONE_FORWARDER = "0x15fC6ae953E024d975e77382eEeC56A9101f9F88";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -56,7 +63,11 @@ const KEYSTONE_FORWARDER = "0x15fC6ae953E024d975e77382eEeC56A9101f9F88";
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async function main() {
-    console.log("\n🚀 SENTINAL V2 Contract Deployment\n");
+    console.log("\n🚀 SENTINAL V3 Contract Deployment\n");
+    console.log("   New in V3:");
+    console.log("   - SentinalGuard circuit breaker (open registry)");
+    console.log("   - Velocity detection via getPreviousUtilizations()");
+    console.log("   - Guard linked to Oracle for auto-pausing\n");
 
     // ── Setup ───────────────────────────────────────
     const privateKey = process.env.PRIVATE_KEY;
@@ -80,51 +91,44 @@ async function main() {
     console.log(`   Forwarder:  ${KEYSTONE_FORWARDER}`);
     await checkBalance(publicClient, account.address);
 
-    // ── Resume from partial deploy if exists ────────
-    let oracleAddress: string | null = null;
-    let controllerAddress: string | null = null;
-    let linked = false;
+    // ── Resume from partial deploy ───────────────────
+    const saved = loadProgress();
 
-    if (existsSync("deployed-addresses-v2.json")) {
-        try {
-            const saved = JSON.parse(readFileSync("deployed-addresses-v2.json", "utf8"));
-            if (saved.ReserveOracleV2 && !saved.linked) {
-                console.log("\n📋 Resuming partial deployment...");
-                oracleAddress = saved.ReserveOracleV2;
-                controllerAddress = saved.EmergencyController || null;
-                console.log(`   OracleV2:   ${oracleAddress || "pending"}`);
-                console.log(`   Controller: ${controllerAddress || "pending"}`);
-            } else if (saved.linked) {
-                linked = true;
-            }
-        } catch { /* ignore corrupt file */ }
-    }
-
-    if (linked) {
-        const saved = JSON.parse(readFileSync("deployed-addresses-v2.json", "utf8"));
+    if (saved.linked) {
         console.log("\n✅ Already fully deployed and linked!");
-        console.log(`   OracleV2:   ${saved.ReserveOracleV2}`);
-        console.log(`   Controller: ${saved.EmergencyController}`);
-        console.log("\n   Delete deployed-addresses-v2.json to redeploy fresh.");
+        console.log(`   ReserveOracleV2:     ${saved.ReserveOracleV2}`);
+        console.log(`   EmergencyController: ${saved.EmergencyController}`);
+        console.log(`   SentinalGuard:       ${saved.SentinalGuard}`);
+        console.log("\n   Delete deployed-addresses-v3.json to redeploy fresh.");
         return;
     }
+
+    let oracleAddress: string | null = saved.ReserveOracleV2 || null;
+    let controllerAddress: string | null = saved.EmergencyController || null;
+    let guardAddress: string | null = saved.SentinalGuard || null;
+
+    if (oracleAddress) console.log(`\n📋 Resuming — Oracle:      ${oracleAddress}`);
+    if (controllerAddress) console.log(`📋 Resuming — Controller:  ${controllerAddress}`);
+    if (guardAddress) console.log(`📋 Resuming — Guard:       ${guardAddress}`);
 
     // ── Artifacts ───────────────────────────────────
     const ReserveOracleV2 = await hre.artifacts.readArtifact("ReserveOracleV2");
     const EmergencyController = await hre.artifacts.readArtifact("EmergencyController");
+    const SentinalGuard = await hre.artifacts.readArtifact("SentinalGuard");
 
-    // ━━━━ STEP 1: Deploy ReserveOracleV2 ━━━━━━━━━━
+    // ━━━━ STEP 1: Deploy ReserveOracleV2 ━━━━━━━━━━━
 
     if (!oracleAddress) {
-        console.log("\n━━━ STEP 1/5: Deploy ReserveOracleV2 ━━━");
+        console.log("\n━━━ STEP 1/7: Deploy ReserveOracleV2 ━━━");
+        await checkBalance(publicClient, account.address);
 
-        const oracleHash = await walletClient.deployContract({
+        const hash = await walletClient.deployContract({
             abi: ReserveOracleV2.abi,
             bytecode: ReserveOracleV2.bytecode as `0x${string}`,
             args: [KEYSTONE_FORWARDER],
         });
 
-        const receipt = await waitForTx(publicClient, oracleHash, "ReserveOracleV2");
+        const receipt = await waitForTx(publicClient, hash, "ReserveOracleV2");
         oracleAddress = receipt.contractAddress!;
         console.log(`   📍 ${oracleAddress}`);
 
@@ -132,27 +136,28 @@ async function main() {
             network: "sepolia",
             ReserveOracleV2: oracleAddress,
             EmergencyController: null,
+            SentinalGuard: null,
             forwarder: KEYSTONE_FORWARDER,
             reporter: account.address,
             linked: false,
             deployedAt: new Date().toISOString(),
         });
     } else {
-        console.log(`\n━━━ STEP 1/5: ReserveOracleV2 ━━━ ✅ ${oracleAddress}`);
+        console.log(`\n━━━ STEP 1/7: ReserveOracleV2 ━━━ ✅ ${oracleAddress}`);
     }
 
-    // ━━━━ STEP 2: Deploy EmergencyController ━━━━━━━
+    // ━━━━ STEP 2: Deploy EmergencyController ━━━━━━━━
 
     if (!controllerAddress) {
-        console.log("\n━━━ STEP 2/5: Deploy EmergencyController ━━━");
+        console.log("\n━━━ STEP 2/7: Deploy EmergencyController ━━━");
         await checkBalance(publicClient, account.address);
 
-        const controllerHash = await walletClient.deployContract({
+        const hash = await walletClient.deployContract({
             abi: EmergencyController.abi,
             bytecode: EmergencyController.bytecode as `0x${string}`,
         });
 
-        const receipt = await waitForTx(publicClient, controllerHash, "EmergencyController");
+        const receipt = await waitForTx(publicClient, hash, "EmergencyController");
         controllerAddress = receipt.contractAddress!;
         console.log(`   📍 ${controllerAddress}`);
 
@@ -160,44 +165,98 @@ async function main() {
             network: "sepolia",
             ReserveOracleV2: oracleAddress,
             EmergencyController: controllerAddress,
+            SentinalGuard: null,
             forwarder: KEYSTONE_FORWARDER,
             reporter: account.address,
             linked: false,
             deployedAt: new Date().toISOString(),
         });
     } else {
-        console.log(`\n━━━ STEP 2/5: EmergencyController ━━━ ✅ ${controllerAddress}`);
+        console.log(`\n━━━ STEP 2/7: EmergencyController ━━━ ✅ ${controllerAddress}`);
     }
 
-    // ━━━━ STEP 3: Link Oracle → Controller ━━━━━━━━━
+    // ━━━━ STEP 3: Deploy SentinalGuard ━━━━━━━━━━━━━━
 
-    console.log("\n━━━ STEP 3/5: Link Oracle → Controller ━━━");
+    if (!guardAddress) {
+        console.log("\n━━━ STEP 3/7: Deploy SentinalGuard ━━━");
+        await checkBalance(publicClient, account.address);
+
+        const hash = await walletClient.deployContract({
+            abi: SentinalGuard.abi,
+            bytecode: SentinalGuard.bytecode as `0x${string}`,
+            // no constructor args — open registry, owner is deployer
+        });
+
+        const receipt = await waitForTx(publicClient, hash, "SentinalGuard");
+        guardAddress = receipt.contractAddress!;
+        console.log(`   📍 ${guardAddress}`);
+
+        saveProgress({
+            network: "sepolia",
+            ReserveOracleV2: oracleAddress,
+            EmergencyController: controllerAddress,
+            SentinalGuard: guardAddress,
+            forwarder: KEYSTONE_FORWARDER,
+            reporter: account.address,
+            linked: false,
+            deployedAt: new Date().toISOString(),
+        });
+    } else {
+        console.log(`\n━━━ STEP 3/7: SentinalGuard ━━━ ✅ ${guardAddress}`);
+    }
+
+    // ━━━━ STEP 4: Link Oracle → EmergencyController ━━
+
+    console.log("\n━━━ STEP 4/7: Link Oracle → EmergencyController ━━━");
     await checkBalance(publicClient, account.address);
 
-    const hash1 = await walletClient.writeContract({
+    const hash4 = await walletClient.writeContract({
         address: oracleAddress as `0x${string}`,
         abi: ReserveOracleV2.abi,
         functionName: "setEmergencyController",
         args: [controllerAddress],
     });
-    await waitForTx(publicClient, hash1, "Oracle → Controller");
+    await waitForTx(publicClient, hash4, "Oracle → EmergencyController");
 
-    // ━━━━ STEP 4: Link Controller → Oracle ━━━━━━━━━
+    // ━━━━ STEP 5: Link EmergencyController → Oracle ━━
 
-    console.log("\n━━━ STEP 4/5: Link Controller → Oracle ━━━");
+    console.log("\n━━━ STEP 5/7: Link EmergencyController → Oracle ━━━");
     await checkBalance(publicClient, account.address);
 
-    const hash2 = await walletClient.writeContract({
+    const hash5 = await walletClient.writeContract({
         address: controllerAddress as `0x${string}`,
         abi: EmergencyController.abi,
         functionName: "setOracle",
         args: [oracleAddress],
     });
-    await waitForTx(publicClient, hash2, "Controller → Oracle");
+    await waitForTx(publicClient, hash5, "Controller → Oracle");
 
-    // ━━━━ STEP 5: Set Reporter (owner = reporter by default, but explicit) ━━━━
+    // ━━━━ STEP 6: Link SentinalGuard ↔ Oracle ━━━━━━━
 
-    console.log("\n━━━ STEP 5/5: Verify Reporter Role ━━━");
+    console.log("\n━━━ STEP 6/7: Link SentinalGuard ↔ Oracle ━━━");
+    await checkBalance(publicClient, account.address);
+
+    // Tell Guard which oracle is authorized to update it
+    const hash6a = await walletClient.writeContract({
+        address: guardAddress as `0x${string}`,
+        abi: SentinalGuard.abi,
+        functionName: "setOracle",
+        args: [oracleAddress],
+    });
+    await waitForTx(publicClient, hash6a, "Guard.setOracle → Oracle");
+
+    // Tell Oracle which guard to push status updates to
+    const hash6b = await walletClient.writeContract({
+        address: oracleAddress as `0x${string}`,
+        abi: ReserveOracleV2.abi,
+        functionName: "setGuard",
+        args: [guardAddress],
+    });
+    await waitForTx(publicClient, hash6b, "Oracle.setGuard → Guard");
+
+    // ━━━━ STEP 7: Verify Reporter Role ━━━━━━━━━━━━━━
+
+    console.log("\n━━━ STEP 7/7: Verify Reporter Role ━━━");
 
     const currentReporter = await publicClient.readContract({
         address: oracleAddress as `0x${string}`,
@@ -208,23 +267,24 @@ async function main() {
 
     if ((currentReporter as string).toLowerCase() !== account.address.toLowerCase()) {
         console.log("   Setting reporter to deployer...");
-        const hash3 = await walletClient.writeContract({
+        const hash7 = await walletClient.writeContract({
             address: oracleAddress as `0x${string}`,
             abi: ReserveOracleV2.abi,
             functionName: "setReporter",
             args: [account.address],
         });
-        await waitForTx(publicClient, hash3, "Set Reporter");
+        await waitForTx(publicClient, hash7, "Set Reporter");
     } else {
         console.log("   ✅ Reporter already set correctly");
     }
 
-    // ━━━━ DONE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // ━━━━ DONE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     saveProgress({
         network: "sepolia",
         ReserveOracleV2: oracleAddress,
         EmergencyController: controllerAddress,
+        SentinalGuard: guardAddress,
         forwarder: KEYSTONE_FORWARDER,
         reporter: account.address,
         linked: true,
@@ -232,34 +292,47 @@ async function main() {
     });
 
     console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("✅ V2 DEPLOYMENT COMPLETE!");
+    console.log("✅ V3 DEPLOYMENT COMPLETE!");
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     console.log("📋 Addresses:");
     console.log(`   ReserveOracleV2:      ${oracleAddress}`);
     console.log(`   EmergencyController:  ${controllerAddress}`);
+    console.log(`   SentinalGuard:        ${guardAddress}`);
     console.log(`   KeystoneForwarder:    ${KEYSTONE_FORWARDER}`);
     console.log(`   Reporter:             ${account.address}`);
 
     console.log("\n📋 Etherscan:");
     console.log(`   https://sepolia.etherscan.io/address/${oracleAddress}`);
     console.log(`   https://sepolia.etherscan.io/address/${controllerAddress}`);
+    console.log(`   https://sepolia.etherscan.io/address/${guardAddress}`);
 
-    console.log("\n📋 Verify:");
+    console.log("\n📋 Verify contracts:");
     console.log(`   npx hardhat verify --network sepolia ${oracleAddress} "${KEYSTONE_FORWARDER}"`);
     console.log(`   npx hardhat verify --network sepolia ${controllerAddress}`);
+    console.log(`   npx hardhat verify --network sepolia ${guardAddress}`);
 
     console.log("\n📋 Update config.staging.json:");
     console.log(`   "oracleAddress": "${oracleAddress}"`);
 
     console.log("\n📋 Update server .env:");
     console.log(`   ORACLE_ADDRESS=${oracleAddress}`);
+    console.log(`   GUARD_ADDRESS=${guardAddress}`);
+
+    console.log("\n🛡️  SentinalGuard Integration Example:");
+    console.log("   Any protocol can now register:");
+    console.log(`   ISentinalGuard guard = ISentinalGuard(${guardAddress});`);
+    console.log('   string[] memory watched = new string[](1);');
+    console.log('   watched[0] = "Aave V3 USDC (Ethereum)";');
+    console.log('   guard.register(watched);');
+    console.log('   // In deposit(): require(guard.isSafe(address(this)), "paused");');
 
     console.log("\n🎯 Next Steps:");
     console.log("   1. Update CRE config with new oracle address");
     console.log("   2. cre workflow simulate healthcheck --broadcast");
-    console.log("   3. Start server with ORACLE_ADDRESS + PRIVATE_KEY");
-    console.log("   4. node scripts/run-and-report.mjs\n");
+    console.log("   3. Start server: ORACLE_ADDRESS + GUARD_ADDRESS + PRIVATE_KEY");
+    console.log("   4. node scripts/run-and-report.mjs");
+    console.log("   5. Register test protocols on SentinalGuard via Etherscan\n");
 }
 
 main().catch((error) => {
