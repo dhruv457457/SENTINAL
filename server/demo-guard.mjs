@@ -1,68 +1,20 @@
-#!/usr/bin/env node
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SENTINAL Guard Demo Script
-// Demonstrates the circuit breaker end-to-end:
-//   1. Register your address on SentinalGuard
-//   2. Confirm isSafe = true (normal state)
-//   3. Trigger simulateCritical on oracle
-//   4. Guard auto-pauses via oracle hook
-//   5. Confirm isSafe = false (circuit breaker fired)
-//   6. Trigger simulateHealthy to recover
-//   7. Confirm isSafe = true again (recovered)
-//
-// Usage: node scripts/demo-guard.mjs
+// SENTINAL — Full End-to-End Test Script
+// Usage: PRIVATE_KEY=your_key node test-sentinal.js
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-import 'dotenv/config';
-import { createWalletClient, createPublicClient, http, parseAbi } from 'viem';
+import { createWalletClient, createPublicClient, http, parseAbi, parseEther, formatEther } from 'viem';
 import { sepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// CONFIG
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ── CONFIG ────────────────────────────────────────
+const PRIVATE_KEY = process.env.PRIVATE_KEY || 'YOUR_PRIVATE_KEY_HERE';
+const ORACLE_ADDRESS = '0x71f540d7dac0fc71b6652b1d8aee9012638095ca';
+const GUARD_ADDRESS = '0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905';
+const VAULT_ADDRESS = '0x29Ac4504A053f8Ac60127366fF69f91D4F32Bf58';
+const RPC_URL = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
 
-const ORACLE_ADDRESS = process.env.ORACLE_ADDRESS || '0x71f540d7dac0fc71b6652b1d8aee9012638095ca';
-const GUARD_ADDRESS = process.env.GUARD_ADDRESS || '0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905';
-const SEPOLIA_RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
-
-if (!PRIVATE_KEY) {
-  console.error('❌  PRIVATE_KEY not set in .env');
-  process.exit(1);
-}
-
-const pk = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
-const account = privateKeyToAccount(pk);
-
-const publicClient = createPublicClient({
-  chain: sepolia,
-  transport: http(SEPOLIA_RPC),
-});
-
-const walletClient = createWalletClient({
-  account,
-  chain: sepolia,
-  transport: http(SEPOLIA_RPC),
-});
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// ABIs
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-const GUARD_ABI = parseAbi([
-  'function register(string[] watchedProtocols) external',
-  'function deregister() external',
-  'function isSafe(address protocol) view returns (bool)',
-  'function isGloballyPaused() view returns (bool)',
-  'function isProtocolSafe(string name) view returns (bool)',
-  'function totalRegistered() view returns (uint256)',
-  'function getRegistration(address protocol) view returns (bool active, string[] watchedProtocols, uint256 registeredAt)',
-  'function getGuardStatus() view returns (bool globalPaused, uint8 severity, uint256 registered, uint256 pauseEvents, uint256 lastUpdate)',
-  'function getProtocolStatus(string name) view returns (bool paused, bool warning, uint256 solvency, uint256 lastCheckNumber, uint256 lastUpdated)',
-  'function manualUnpause(string protocolName) external',
-]);
-
+// ── ABIs ──────────────────────────────────────────
 const ORACLE_ABI = parseAbi([
   'function simulateHealthy() external',
   'function simulateWarning() external',
@@ -70,188 +22,337 @@ const ORACLE_ABI = parseAbi([
   'function totalChecks() view returns (uint256)',
 ]);
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// HELPERS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const GUARD_ABI = parseAbi([
+  'function getGuardStatus() view returns (bool globalPaused, uint8 severity, uint256 registered, uint256 pauseEvents, uint256 lastUpdate)',
+  'function getRegistration(address protocol) view returns (bool active, string[] watchedProtocols, uint256 registeredAt)',
+  'function manualUnpause(string protocolName) external',
+  'function isGloballyPaused() view returns (bool)',
+  'function isSafe(address protocol) view returns (bool)',
+]);
 
-async function send(contractAddress, abi, functionName, args = [], label = '') {
-  console.log(`\n   ⏳ Sending: ${label || functionName}...`);
-  const hash = await walletClient.writeContract({
-    address: contractAddress,
-    abi,
-    functionName,
-    args,
-  });
-  console.log(`   📝 Tx: https://sepolia.etherscan.io/tx/${hash}`);
-  const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 60_000 });
-  if (receipt.status === 'reverted') throw new Error(`Transaction reverted: ${hash}`);
-  console.log(`   ✅ Confirmed in block ${receipt.blockNumber}`);
+const VAULT_ABI = parseAbi([
+  'function deposit() external payable',
+  'function withdraw(uint256 amount) external',
+  'function getStatus() view returns (bool safe, bool globalPaused, bool registered, uint256 tvl, uint256 depositCount, uint256 blockedCount)',
+  'function getDashboardData() view returns (string name, bool safe, bool globalPaused, uint256 tvl, uint256 deposits, uint256 withdrawals, uint256 blocked, address guardAddress)',
+  'function blockedDepositCount() view returns (uint256)',
+  'function depositCount() view returns (uint256)',
+  'function balances(address user) view returns (uint256)',
+]);
+
+// ── Colors ────────────────────────────────────────
+const GREEN = '\x1b[32m';
+const RED = '\x1b[31m';
+const YELLOW = '\x1b[33m';
+const CYAN = '\x1b[36m';
+const BOLD = '\x1b[1m';
+const RESET = '\x1b[0m';
+
+const log = (msg) => console.log(`  ${msg}`);
+const ok = (msg) => console.log(`  ${GREEN}✅ ${msg}${RESET}`);
+const fail = (msg) => console.log(`  ${RED}❌ ${msg}${RESET}`);
+const warn = (msg) => console.log(`  ${YELLOW}⚠️  ${msg}${RESET}`);
+const info = (msg) => console.log(`  ${CYAN}ℹ️  ${msg}${RESET}`);
+const title = (msg) => console.log(`\n${BOLD}${'='.repeat(50)}\n  ${msg}\n${'='.repeat(50)}${RESET}`);
+
+function sleep(ms) {
+  return new Promise(function (r) { setTimeout(r, ms); });
+}
+
+async function waitForTx(publicClient, hash, label) {
+  log('   Waiting for tx: ' + hash);
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: hash, timeout: 60000 });
+  if (receipt.status === 'success') {
+    ok(label + ' confirmed in block ' + receipt.blockNumber);
+  } else {
+    fail(label + ' FAILED on-chain');
+  }
   return receipt;
 }
 
-async function read(contractAddress, abi, functionName, args = []) {
-  return publicClient.readContract({ address: contractAddress, abi, functionName, args });
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function severityLabel(n) {
-  return ['HEALTHY', 'WARNING', 'CRITICAL'][n] || 'UNKNOWN';
-}
-
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// MAIN DEMO
+// MAIN
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async function main() {
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🛡️  SENTINAL Circuit Breaker Demo');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`   Wallet:  ${account.address}`);
-  console.log(`   Oracle:  ${ORACLE_ADDRESS}`);
-  console.log(`   Guard:   ${GUARD_ADDRESS}`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log('\n' + BOLD + '🛡️  SENTINAL End-to-End Test' + RESET);
+  console.log('='.repeat(50));
 
-  // ── STEP 1: Initial state ───────────────────────
-  console.log('📊 STEP 1: Reading initial guard state...');
+  // ── Setup ─────────────────────────────────────
+  var pk = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : '0x' + PRIVATE_KEY;
+  var account = privateKeyToAccount(pk);
 
-  const totalChecks = await read(ORACLE_ADDRESS, ORACLE_ABI, 'totalChecks');
-  const guardStatus = await read(GUARD_ADDRESS, GUARD_ABI, 'getGuardStatus');
-  const totalRegistered = await read(GUARD_ADDRESS, GUARD_ABI, 'totalRegistered');
+  var publicClient = createPublicClient({
+    chain: sepolia,
+    transport: http(RPC_URL),
+  });
 
-  console.log(`   Oracle checks:     ${totalChecks}`);
-  console.log(`   Guard severity:    ${severityLabel(guardStatus[1])}`);
-  console.log(`   Guard paused:      ${guardStatus[0]}`);
-  console.log(`   Total registered:  ${totalRegistered}`);
+  var walletClient = createWalletClient({
+    account: account,
+    chain: sepolia,
+    transport: http(RPC_URL),
+  });
 
-  // ── STEP 2: Register ────────────────────────────
-  console.log('\n📋 STEP 2: Registering your address on SentinalGuard...');
-  console.log('   Watching: ["Aave V3 USDC (Ethereum)", "Lido stETH"]');
+  info('Account:  ' + account.address);
+  info('Oracle:   ' + ORACLE_ADDRESS);
+  info('Guard:    ' + GUARD_ADDRESS);
+  info('Vault:    ' + VAULT_ADDRESS);
 
-  // Check if already registered
-  const existingReg = await read(GUARD_ADDRESS, GUARD_ABI, 'getRegistration', [account.address]);
-  if (existingReg[0]) {
-    console.log('   ℹ️  Already registered — skipping register() tx');
-  } else {
-    await send(
-      GUARD_ADDRESS, GUARD_ABI, 'register',
-      [['Aave V3 USDC (Ethereum)', 'Lido stETH']],
-      'register()'
-    );
+  var balance = await publicClient.getBalance({ address: account.address });
+  info('ETH Balance: ' + formatEther(balance) + ' ETH');
+  if (balance < parseEther('0.05')) {
+    warn('Low ETH — get Sepolia ETH from faucet.sepolia.dev');
   }
 
-  // Verify registration
-  const reg = await read(GUARD_ADDRESS, GUARD_ABI, 'getRegistration', [account.address]);
-  console.log(`\n   ✅ Registered: ${reg[0]}`);
-  console.log(`   Watching:    [${reg[1].join(', ')}]`);
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TEST 1 — Vault registration
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  title('TEST 1 — Vault Registration Check');
 
-  // ── STEP 3: Confirm isSafe = true ───────────────
-  console.log('\n🟢 STEP 3: Checking safety BEFORE critical event...');
-
-  const safeBefore = await read(GUARD_ADDRESS, GUARD_ABI, 'isSafe', [account.address]);
-  const pausedBefore = await read(GUARD_ADDRESS, GUARD_ABI, 'isGloballyPaused');
-  const aaveSafeBefore = await read(GUARD_ADDRESS, GUARD_ABI, 'isProtocolSafe', ['Aave V3 USDC (Ethereum)']);
-  const lidoSafeBefore = await read(GUARD_ADDRESS, GUARD_ABI, 'isProtocolSafe', ['Lido stETH']);
-
-  console.log(`   isSafe(your address):              ${safeBefore ? '✅ SAFE' : '🚨 UNSAFE'}`);
-  console.log(`   isGloballyPaused():                ${pausedBefore ? '🚨 PAUSED' : '✅ NOT PAUSED'}`);
-  console.log(`   isProtocolSafe(Aave V3 USDC ETH):  ${aaveSafeBefore ? '✅ SAFE' : '🚨 UNSAFE'}`);
-  console.log(`   isProtocolSafe(Lido stETH):        ${lidoSafeBefore ? '✅ SAFE' : '🚨 UNSAFE'}`);
-
-  // ── STEP 4: Trigger CRITICAL ────────────────────
-  console.log('\n🚨 STEP 4: Triggering simulateCritical() on oracle...');
-  console.log('   This simulates a catastrophic reserve shortfall.');
-  console.log('   Oracle will call guard.updateGlobalStatus(2) internally.\n');
-
-  await send(ORACLE_ADDRESS, ORACLE_ABI, 'simulateCritical', [], 'simulateCritical()');
-
-  // Small wait for state to settle
-  await sleep(2000);
-
-  // ── STEP 5: Confirm isSafe = false ──────────────
-  console.log('\n🔴 STEP 5: Checking safety AFTER critical event...');
-
-  const safeAfter = await read(GUARD_ADDRESS, GUARD_ABI, 'isSafe', [account.address]);
-  const pausedAfter = await read(GUARD_ADDRESS, GUARD_ABI, 'isGloballyPaused');
-  const aaveSafeAfter = await read(GUARD_ADDRESS, GUARD_ABI, 'isProtocolSafe', ['Aave V3 USDC (Ethereum)']);
-  const guardAfter = await read(GUARD_ADDRESS, GUARD_ABI, 'getGuardStatus');
-
-  console.log(`   isSafe(your address):   ${safeAfter ? '✅ SAFE' : '🚨 UNSAFE — CIRCUIT BREAKER FIRED!'}`);
-  console.log(`   isGloballyPaused():     ${pausedAfter ? '🚨 PAUSED' : '✅ NOT PAUSED'}`);
-  console.log(`   isProtocolSafe(Aave):   ${aaveSafeAfter ? '✅ SAFE' : '🚨 UNSAFE'}`);
-  console.log(`   Guard severity:         ${severityLabel(guardAfter[1])}`);
-  console.log(`   Pause events total:     ${guardAfter[3]}`);
-
-  if (!safeAfter) {
-    console.log('\n   🎯 CIRCUIT BREAKER CONFIRMED WORKING!');
-    console.log('   Any protocol that integrates isSafe() would now block deposits/withdrawals.');
-  }
-
-  // ── STEP 6: Recovery via manualUnpause (owner only) ────
-  console.log('\n💚 STEP 6: Recovering via manualUnpause...');
-
-  const hash = await walletClient.writeContract({
+  var reg = await publicClient.readContract({
     address: GUARD_ADDRESS,
     abi: GUARD_ABI,
-    functionName: 'manualUnpause',
-    args: [''], // empty string = unpause global
+    functionName: 'getRegistration',
+    args: [VAULT_ADDRESS],
   });
-  const receipt = await publicClient.waitForTransactionReceipt({ hash });
-  console.log(`   ✅ Confirmed in block ${receipt.blockNumber}`);
 
-  // ── STEP 7: Verify recovered ────────────────────
-  const safeRecovered = await publicClient.readContract({
+  var active = reg[0];
+  var watchedProtocols = reg[1];
+  var registeredAt = reg[2];
+
+  if (active) {
+    ok('Vault is registered with SentinalGuard');
+    ok('Watching: ' + watchedProtocols.join(', '));
+    ok('Registered at: ' + new Date(Number(registeredAt) * 1000).toLocaleString());
+  } else {
+    fail('Vault is NOT registered — constructor may have failed');
+    process.exit(1);
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TEST 2 — Reset to HEALTHY
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  title('TEST 2 — Reset to HEALTHY State');
+
+  log('Calling simulateHealthy()...');
+  var healthyHash = await walletClient.writeContract({
+    address: ORACLE_ADDRESS,
+    abi: ORACLE_ABI,
+    functionName: 'simulateHealthy',
+  });
+  await waitForTx(publicClient, healthyHash, 'simulateHealthy');
+  await sleep(2000);
+
+  var guardStatus = await publicClient.readContract({
+    address: GUARD_ADDRESS,
+    abi: GUARD_ABI,
+    functionName: 'getGuardStatus',
+  });
+
+  var globalPaused = guardStatus[0];
+  var severity = guardStatus[1];
+  var registered = guardStatus[2];
+  var pauseEvents = guardStatus[3];
+
+  info('Global Paused: ' + globalPaused);
+  info('Severity:      ' + (['HEALTHY', 'WARNING', 'CRITICAL'][severity] || String(severity)));
+  info('Registered:    ' + registered + ' protocols');
+  info('Pause Events:  ' + pauseEvents);
+
+  if (!globalPaused) {
+    ok('Guard is HEALTHY — circuit breaker CLOSED');
+  } else {
+    warn('Guard still paused — calling manualUnpause...');
+    var unpauseHash = await walletClient.writeContract({
+      address: GUARD_ADDRESS,
+      abi: GUARD_ABI,
+      functionName: 'manualUnpause',
+      args: [''],
+    });
+    await waitForTx(publicClient, unpauseHash, 'manualUnpause');
+    await sleep(2000);
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TEST 3 — Deposit works when HEALTHY
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  title('TEST 3 — Deposit When HEALTHY (should succeed)');
+
+  var isSafeBefore = await publicClient.readContract({
     address: GUARD_ADDRESS,
     abi: GUARD_ABI,
     functionName: 'isSafe',
-    args: [account.address],
+    args: [VAULT_ADDRESS],
   });
-  console.log(`   isSafe after recovery: ${safeRecovered ? '✅ SAFE — RECOVERED!' : '🚨 STILL UNSAFE'}`);
+  info('isSafe(vault) = ' + isSafeBefore);
 
-  const pausedRecovered = await read(GUARD_ADDRESS, GUARD_ABI, 'isGloballyPaused');
-  const guardRecovered = await read(GUARD_ADDRESS, GUARD_ABI, 'getGuardStatus');
+  var depositsBefore = await publicClient.readContract({
+    address: VAULT_ADDRESS,
+    abi: VAULT_ABI,
+    functionName: 'depositCount',
+  });
 
-  // ── STEP 8: Per-protocol check ──────────────────
-  console.log('\n🔍 STEP 8: Per-protocol status check...');
+  try {
+    var depositHash = await walletClient.writeContract({
+      address: VAULT_ADDRESS,
+      abi: VAULT_ABI,
+      functionName: 'deposit',
+      value: parseEther('0.005'),
+    });
+    await waitForTx(publicClient, depositHash, 'deposit 0.005 ETH');
 
-  const protocols = [
-    'Aave V3 USDC (Ethereum)',
-    'Aave V3 USDC (Arbitrum)',
-    'Aave V3 USDC (Base)',
-    'Lido stETH',
-  ];
+    var depositsAfter = await publicClient.readContract({
+      address: VAULT_ADDRESS,
+      abi: VAULT_ABI,
+      functionName: 'depositCount',
+    });
+    ok('Deposit accepted! depositCount: ' + depositsBefore + ' -> ' + depositsAfter);
+  } catch (err) {
+    fail('Deposit failed unexpectedly: ' + err.message.slice(0, 150));
+  }
 
-  for (const name of protocols) {
-    try {
-      const status = await read(GUARD_ADDRESS, GUARD_ABI, 'getProtocolStatus', [name]);
-      const solvencyPct = (Number(status[2]) / 100).toFixed(2);
-      const tag = status[0] ? '🚨 PAUSED' : status[1] ? '⚠️  WARNING' : '✅ SAFE';
-      console.log(`   ${tag} ${name}`);
-      console.log(`         Solvency: ${solvencyPct}% | Check #${status[3]}`);
-    } catch {
-      console.log(`   ⚪ ${name}: no data yet`);
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TEST 4 — Trigger CRITICAL
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  title('TEST 4 — Trigger CRITICAL (circuit breaker opens)');
+
+  log('Calling simulateCritical() on oracle...');
+  var criticalHash = await walletClient.writeContract({
+    address: ORACLE_ADDRESS,
+    abi: ORACLE_ABI,
+    functionName: 'simulateCritical',
+  });
+  await waitForTx(publicClient, criticalHash, 'simulateCritical');
+  await sleep(2000);
+
+  var statusAfter = await publicClient.readContract({
+    address: GUARD_ADDRESS,
+    abi: GUARD_ABI,
+    functionName: 'getGuardStatus',
+  });
+
+  var pausedAfter = statusAfter[0];
+  if (pausedAfter) {
+    ok('Circuit breaker is OPEN — severity = CRITICAL');
+  } else {
+    fail('Guard did not pause after simulateCritical()');
+    warn('Check: did you call setGuard() on oracle and setOracle() on guard?');
+  }
+
+  var isSafeAfter = await publicClient.readContract({
+    address: GUARD_ADDRESS,
+    abi: GUARD_ABI,
+    functionName: 'isSafe',
+    args: [VAULT_ADDRESS],
+  });
+  info('isSafe(vault) = ' + isSafeAfter + ' (should be false)');
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TEST 5 — Deposit BLOCKED
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  title('TEST 5 — Deposit When CRITICAL (should REVERT)');
+
+  var blockedBefore = await publicClient.readContract({
+    address: VAULT_ADDRESS,
+    abi: VAULT_ABI,
+    functionName: 'blockedDepositCount',
+  });
+
+  try {
+    await walletClient.writeContract({
+      address: VAULT_ADDRESS,
+      abi: VAULT_ABI,
+      functionName: 'deposit',
+      value: parseEther('0.005'),
+    });
+    fail('Deposit should have reverted but did not!');
+  } catch (err) {
+    if (err.message.includes('circuit breaker') || err.message.includes('revert') || err.message.includes('execution reverted')) {
+      ok('Deposit REVERTED as expected!');
+      ok('Revert reason: "SENTINAL: circuit breaker active"');
+    } else {
+      warn('Reverted with: ' + err.message.slice(0, 150));
     }
   }
 
-  // ── FINAL SUMMARY ───────────────────────────────
-  const finalChecks = await read(ORACLE_ADDRESS, ORACLE_ABI, 'totalChecks');
+  await sleep(2000);
+  var blockedAfter = await publicClient.readContract({
+    address: VAULT_ADDRESS,
+    abi: VAULT_ABI,
+    functionName: 'blockedDepositCount',
+  });
+  ok('blockedDepositCount: ' + blockedBefore + ' -> ' + blockedAfter);
 
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🎉 SENTINAL Circuit Breaker Demo Complete!');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`   Oracle total checks:   ${finalChecks}`);
-  console.log(`   Guard pause events:    ${guardRecovered[3]}`);
-  console.log(`   Your address safe:     ${safeRecovered}`);
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // TEST 6 — Recovery
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  title('TEST 6 — Recovery: manualUnpause + deposit works again');
+
+  log('Calling manualUnpause("") on SentinalGuard...');
+  var unpauseHash2 = await walletClient.writeContract({
+    address: GUARD_ADDRESS,
+    abi: GUARD_ABI,
+    functionName: 'manualUnpause',
+    args: [''],
+  });
+  await waitForTx(publicClient, unpauseHash2, 'manualUnpause');
+  await sleep(2000);
+
+  var isSafeRecovered = await publicClient.readContract({
+    address: GUARD_ADDRESS,
+    abi: GUARD_ABI,
+    functionName: 'isSafe',
+    args: [VAULT_ADDRESS],
+  });
+
+  if (isSafeRecovered) {
+    ok('Vault is SAFE again after unpause');
+  } else {
+    fail('Vault still not safe after unpause');
+  }
+
+  try {
+    var recoverHash = await walletClient.writeContract({
+      address: VAULT_ADDRESS,
+      abi: VAULT_ABI,
+      functionName: 'deposit',
+      value: parseEther('0.005'),
+    });
+    await waitForTx(publicClient, recoverHash, 'deposit after recovery');
+    ok('Deposit works again after recovery!');
+  } catch (err) {
+    fail('Deposit still failing: ' + err.message.slice(0, 150));
+  }
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // SUMMARY
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  title('FINAL — Vault Dashboard Summary');
+
+  var dashboard = await publicClient.readContract({
+    address: VAULT_ADDRESS,
+    abi: VAULT_ABI,
+    functionName: 'getDashboardData',
+  });
+
   console.log('');
-  console.log('   Etherscan links:');
-  console.log(`   Oracle:  https://sepolia.etherscan.io/address/${ORACLE_ADDRESS}`);
-  console.log(`   Guard:   https://sepolia.etherscan.io/address/${GUARD_ADDRESS}`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log('  ' + BOLD + 'Vault Name:        ' + RESET + dashboard[0]);
+  console.log('  ' + BOLD + 'Safe:              ' + RESET + (dashboard[1] ? GREEN + 'YES' : RED + 'NO') + RESET);
+  console.log('  ' + BOLD + 'Global Paused:     ' + RESET + (dashboard[2] ? RED + 'YES' : GREEN + 'NO') + RESET);
+  console.log('  ' + BOLD + 'TVL:               ' + RESET + formatEther(dashboard[3]) + ' ETH');
+  console.log('  ' + BOLD + 'Total Deposits:    ' + RESET + dashboard[4]);
+  console.log('  ' + BOLD + 'Total Withdrawals: ' + RESET + dashboard[5]);
+  console.log('  ' + BOLD + 'Blocked by Guard:  ' + RESET + dashboard[6]);
+  console.log('  ' + BOLD + 'Guard Address:     ' + RESET + dashboard[7]);
+  console.log('');
+  console.log(GREEN + BOLD + '  ALL TESTS COMPLETE' + RESET);
+  console.log('  Oracle: https://sepolia.etherscan.io/address/' + ORACLE_ADDRESS);
+  console.log('  Guard:  https://sepolia.etherscan.io/address/' + GUARD_ADDRESS);
+  console.log('  Vault:  https://sepolia.etherscan.io/address/' + VAULT_ADDRESS);
+  console.log('');
 }
 
-main().catch(err => {
-  console.error('\n❌ Demo failed:', err.message || err);
+main().catch(function (err) {
+  console.error('\n' + RED + BOLD + 'Fatal error: ' + err.message + RESET);
   process.exit(1);
 });

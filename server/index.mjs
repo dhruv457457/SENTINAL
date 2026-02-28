@@ -250,6 +250,55 @@ app.get('/api/history', (req, res) => {
     const history = loadHistory();
     res.json(history);
 });
+app.get('/api/guard/status', async (req, res) => {
+    try {
+        if (!onchainReporter) {
+            return res.json({
+                globalPaused: false,
+                severity: 0,
+                registered: 0,
+                pauseEvents: 0,
+                lastUpdate: 0,
+            });
+        }
+
+        const status = await onchainReporter.getGuardStatus();
+        if (!status) {
+            return res.json({
+                globalPaused: false,
+                severity: 0,
+                registered: 0,
+                pauseEvents: 0,
+                lastUpdate: 0,
+            });
+        }
+
+        res.json({
+            globalPaused: status.globalPaused,
+            severity: Number(status.severity),
+            registered: Number(status.registered),
+            pauseEvents: Number(status.pauseEvents),
+            lastUpdate: Number(status.lastUpdate),
+        });
+    } catch (err) {
+        console.error('Guard status error:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /api/guard/protocol/:name
+// Optional — per-protocol guard status
+app.get('/api/guard/protocol/:name', async (req, res) => {
+    try {
+        const name = decodeURIComponent(req.params.name);
+        if (!onchainReporter) return res.status(503).json({ error: 'Reporter not initialized' });
+
+        const safe = await onchainReporter.isProtocolSafe(name);
+        res.json({ name, safe });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 // GET /api/latest
 app.get('/api/latest', (req, res) => {
@@ -318,7 +367,55 @@ app.post('/api/alerts/test', async (req, res) => {
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', uptime: process.uptime(), onchainEnabled: !!onchainReporter });
 });
+app.get('/api/vault/status', async (req, res) => {
+    try {
+        const { createPublicClient, http, parseAbi, formatEther } = await import('viem');
+        const { sepolia } = await import('viem/chains');
 
+        const VAULT_ADDRESS = process.env.VAULT_ADDRESS || '0x29Ac4504A053f8Ac60127366fF69f91D4F32Bf58';
+        const RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
+
+        const VAULT_ABI = parseAbi([
+            'function getDashboardData() view returns (string name, bool safe, bool globalPaused, uint256 tvl, uint256 deposits, uint256 withdrawals, uint256 blocked, address guardAddress)',
+            'function getRegistration_helper() view returns (bool registered)',
+        ]);
+
+        const GUARD_ABI = parseAbi([
+            'function getRegistration(address protocol) view returns (bool active, string[] watchedProtocols, uint256 registeredAt)',
+        ]);
+
+        const client = createPublicClient({ chain: sepolia, transport: http(RPC) });
+
+        const [dashboard, reg] = await Promise.all([
+            client.readContract({
+                address: VAULT_ADDRESS,
+                abi: VAULT_ABI,
+                functionName: 'getDashboardData',
+            }),
+            client.readContract({
+                address: process.env.GUARD_ADDRESS || '0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905',
+                abi: GUARD_ABI,
+                functionName: 'getRegistration',
+                args: [VAULT_ADDRESS],
+            }),
+        ]);
+
+        res.json({
+            vaultName: dashboard[0],
+            safe: dashboard[1],
+            globalPaused: dashboard[2],
+            tvlEth: formatEther(dashboard[3]),
+            depositCount: Number(dashboard[4]),
+            withdrawalCount: Number(dashboard[5]),
+            blockedCount: Number(dashboard[6]),
+            guardAddress: dashboard[7],
+            registered: reg[0],
+        });
+    } catch (err) {
+        console.error('Vault status error:', err.message);
+        res.status(500).json({ error: err.message });
+    }
+});
 // GET /api/onchain/dashboard
 app.get('/api/onchain/dashboard', async (req, res) => {
     if (!onchainReporter) return res.status(503).json({ error: 'Onchain reporter not configured' });

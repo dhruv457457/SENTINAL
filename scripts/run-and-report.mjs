@@ -9,7 +9,7 @@ import { execSync } from 'child_process';
 const SERVER_URL = process.env.SENTINAL_SERVER || 'http://localhost:3001';
 const broadcast = process.argv.includes('--broadcast');
 // ✅ CONFIG: Time to wait between checks (60 seconds)
-const DELAY_MS = 60 * 1000; 
+const DELAY_MS = 60 * 1000;
 
 // Point to the workflow directory
 const WORKFLOW_DIR = './cre-workflow/healthcheck-monitor';
@@ -21,13 +21,13 @@ const cmd = broadcast
 async function runCheck() {
   // ── 1. Run CRE Workflow ────────────────────────
   console.log(`\n🚀 Starting check at ${new Date().toLocaleTimeString()}...`);
-  
+
   let output;
   try {
-    output = execSync(cmd, { 
-      encoding: 'utf8', 
+    output = execSync(cmd, {
+      encoding: 'utf8',
       timeout: 120000,
-      cwd: WORKFLOW_DIR 
+      cwd: WORKFLOW_DIR
     });
   } catch (err) {
     // execSync throws on exit code != 0, but we want to capture stdout
@@ -60,7 +60,7 @@ async function runCheck() {
     if (res.ok) {
       const data = await res.json();
       console.log(`✅ Server synced.`);
-      
+
       if (data.alerts?.length > 0) {
         for (const a of data.alerts) {
           console.log(`   ${a.success ? '🔔' : '❌'} Alert (${a.platform}): ${a.success ? 'Sent' : a.error}`);
@@ -77,12 +77,12 @@ async function runCheck() {
 async function loop() {
   await runCheck();
   console.log(`\n⏳ Waiting ${DELAY_MS / 1000}s for next check...`);
-  
+
   // Schedule next run
   setTimeout(loop, DELAY_MS);
 }
 
 // Start the loop
-console.log(`\n🔄 Starting SENTINAL Loop (Interval: ${DELAY_MS/1000}s)`);
+console.log(`\n🔄 Starting SENTINAL Loop (Interval: ${DELAY_MS / 1000}s)`);
 if (broadcast) console.log("📡 BROADCAST MODE ENABLED (Real TXs)");
 loop();
