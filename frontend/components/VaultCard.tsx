@@ -25,7 +25,8 @@ export function VaultCard({ guardPaused = false }: VaultCardProps) {
 
     async function fetchVaultStatus() {
         try {
-            const res = await fetch(`/api/vault/status`, { cache: 'no-store' });
+            const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+            const res = await fetch(`${API_URL}/api/vault/status`, { cache: 'no-store' });
             if (res.ok) {
                 const data = await res.json();
                 setStatus(data);
