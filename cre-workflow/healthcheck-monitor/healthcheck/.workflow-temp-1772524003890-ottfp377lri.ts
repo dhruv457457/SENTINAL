@@ -12,7 +12,7 @@ import {
 	hexToBase64,
 	HTTPClient,
 	type NodeRuntime,
-	consensusMedianAggregation,
+	consensusMedianAggregation, sendErrorResponse,
 } from '@chainlink/cre-sdk'
 import { encodeFunctionData, decodeFunctionResult, zeroAddress, encodeAbiParameters, parseAbiParameters } from 'viem'
 import { z } from 'zod'
@@ -49,6 +49,13 @@ type Protocol = Config['protocols'][0]
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const RESERVE_ORACLE_ABI = [
+	{
+		inputs: [],
+		name: 'totalChecks',
+		outputs: [{ name: '', type: 'uint256' }],
+		stateMutability: 'view',
+		type: 'function',
+	},
 	{
 		// Call #15: reads stored utilizations from previous check
 		inputs: [{ name: 'names', type: 'string[]' }],
@@ -253,6 +260,8 @@ function readLido(
 	const claimedETH = totalStETH / d
 	const actualETH = pooledEther / d
 	const ratio = Number(claimedETH) > 0 ? (Number(actualETH) * 10000) / Number(claimedETH) : 10000
+
+	// Lido has no borrow utilization — use unbacking delta as proxy
 	const utilizationBps = ratio >= 10000 ? 0 : Math.floor(10000 - ratio)
 
 	return {
@@ -320,6 +329,8 @@ function calculateVelocities(
 	return results.map((result, i) => {
 		const currentBps = result.utilizationBps
 		const prevBps = Number(previousUtils[i])
+
+		// On first run prevBps is 0 — no real delta, suppress everything
 		const delta = currentBps - prevBps
 		const velocityBps = isFirstRun ? 0 : Math.abs(delta)
 		const velocityNegative = delta < 0
@@ -439,9 +450,6 @@ function createDiscordAlerter(webhookUrl: string, data: any) {
 //   Calls  9-12: Aave Base
 //   Calls 13-14: Lido            (getTotalPooledEther + totalSupply)
 //   Call  15:    oracle.getPreviousUtilizations()  ← velocity detection
-//
-// NOTE: totalChecks removed from EVM calls — check numbering handled
-//       by server (sequential) so we stay within the 15-call budget.
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function healthCheckWorkflow(
@@ -506,20 +514,53 @@ function healthCheckWorkflow(
 	}
 
 	// ═══════════════════════════════════════════════
-	// STEP 3: READ PREVIOUS UTILIZATIONS (Call 15)
-	//
-	// totalChecks removed — was consuming call 14/15 budget.
-	// Check numbering is managed server-side (sequential).
-	// Call 15 is now exclusively for getPreviousUtilizations.
+	// STEP 3: READ ORACLE STATE + PREV UTILS (Call 15)
 	// ═══════════════════════════════════════════════
 
 	runtime.log('')
-	runtime.log('📡 STEP 3: Read Previous Utilizations [Call 15 — Sepolia]')
+	runtime.log('📡 STEP 3: Read Oracle State + Previous Utilizations [Call 15 — Sepolia]')
 
 	const sepoliaClient = getClient(config.chainSelector, true)
 
-	// Use timestamp-based check number — server will assign the real sequential number
-	const checkNumber = Math.floor(runtime.now() / 1000) % 100000
+	// ── Read totalChecks ────────────────────────────
+	const checksCall = encodeFunctionData({
+		abi: RESERVE_ORACLE_ABI,
+		functionName: 'totalChecks',
+		args: [],
+	})
+
+	let currentChecks = 0
+	let checkNumber = 1
+
+	try {
+		const checksResult = sepoliaClient
+			.callContract(runtime, {
+				call: encodeCallMsg({
+					from: zeroAddress,
+					to: config.oracleAddress as `0x${string}`,
+					data: checksCall,
+				}),
+				blockNumber: LAST_FINALIZED_BLOCK_NUMBER,
+			})
+			.result()
+
+		if (checksResult.data && checksResult.data.length > 0) {
+			const decoded = decodeFunctionResult({
+				abi: RESERVE_ORACLE_ABI,
+				functionName: 'totalChecks',
+				data: bytesToHex(checksResult.data),
+			})
+			currentChecks = Number(decoded)
+			checkNumber = currentChecks + 1
+		}
+	} catch {
+		runtime.log('   ⚠️  Could not read totalChecks')
+	}
+
+	runtime.log(`   ✅ Current checks: ${currentChecks} → Next: #${checkNumber}`)
+
+	// ── Call 15: Read previous utilizations ─────────
+	runtime.log('   📊 Reading previous utilizations (Call 15)...')
 
 	const protocolNames = config.protocols.map(p => p.name)
 	let previousUtils: bigint[] = config.protocols.map(() => 0n)
@@ -532,12 +573,11 @@ function healthCheckWorkflow(
 			args: [protocolNames],
 		})
 
-		// ✅ prevUtilCall is already a 0x hex string — pass directly
 		const prevUtilResult = evmCall(
 			sepoliaClient,
 			runtime,
 			config.oracleAddress,
-			prevUtilCall
+			bytesToHex(new Uint8Array(Buffer.from(prevUtilCall.slice(2), 'hex')))
 		)
 
 		const decoded = decodeFunctionResult({
@@ -548,21 +588,20 @@ function healthCheckWorkflow(
 
 		if (decoded.length === protocolNames.length) {
 			previousUtils = decoded
-			// All zeros = no baseline stored yet (genuine first run)
+			// First run = all zeros means no baseline has been stored yet
 			isFirstRun = decoded.every(v => v === 0n)
 
 			if (isFirstRun) {
-				runtime.log('   ℹ️  First run — seeding baseline, velocity scoring suppressed')
+				runtime.log('   ℹ️  First run detected — seeding baseline, velocity scoring suppressed')
 			} else {
-				runtime.log(`   ✅ Previous utilizations loaded (${decoded.length} protocols)`)
+				runtime.log(`   ✅ Previous utils loaded (${decoded.length} protocols)`)
 				for (let i = 0; i < decoded.length; i++) {
 					runtime.log(`      ${protocolNames[i]}: ${(Number(decoded[i]) / 100).toFixed(1)}%`)
 				}
 			}
 		}
-	} catch (e: any) {
-		runtime.log(`   ⚠️  Could not read previous utilizations — treating as first run`)
-		runtime.log(`      Error: ${e?.message || String(e)}`)
+	} catch {
+		runtime.log('   ⚠️  Could not read previous utilizations — treating as first run')
 		isFirstRun = true
 	}
 
@@ -644,6 +683,7 @@ function healthCheckWorkflow(
 	let worstSolvency = 10000
 	let worstProtocol = ''
 
+	// ── Solvency scoring ────────────────────────────
 	for (const result of results) {
 		if (result.solvencyRatio < worstSolvency) {
 			worstSolvency = result.solvencyRatio
@@ -654,16 +694,20 @@ function healthCheckWorkflow(
 		if (result.solvencyRatio < 8000) riskScore += 10
 	}
 
+	// ── Velocity scoring — suppressed on first run ──
 	if (!isFirstRun) {
 		for (const v of velocities) {
 			if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD && !v.velocityNegative) {
+				// Sharp utilization INCREASE — borrow run signal
 				riskScore += 15
 				runtime.log(`   ⚡ Velocity risk: ${v.name} +${(v.velocityBps / 100).toFixed(1)}% → +15 risk`)
 				if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD * 3) {
+					// Extreme spike (15%+ per cycle)
 					riskScore += 20
 					runtime.log(`   🚨 EXTREME velocity: ${v.name} → +20 additional risk`)
 				}
 			} else if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD && v.velocityNegative) {
+				// Sharp DECREASE — could be panic withdrawals
 				riskScore += 10
 				runtime.log(`   ⚡ Rapid withdrawal: ${v.name} -${(v.velocityBps / 100).toFixed(1)}% → +10 risk`)
 			}
@@ -675,6 +719,7 @@ function healthCheckWorkflow(
 	riskScore += crossRefRisk
 	if (riskScore > 100) riskScore = 100
 
+	// anomalyDetected stays false on first run even for velocity
 	const anomalyDetected = crossRefRisk > 0
 		|| worstSolvency < 9500
 		|| (!isFirstRun && velocityAlerts.length > 0)
@@ -871,4 +916,6 @@ const initWorkflow = (config: Config) => {
 export async function main() {
 	const runner = await Runner.newRunner<Config>({ configSchema })
 	await runner.run(initWorkflow)
-}                               
+}
+
+main().catch(sendErrorResponse)

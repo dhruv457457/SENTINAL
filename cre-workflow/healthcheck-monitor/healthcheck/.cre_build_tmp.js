@@ -16794,13 +16794,6 @@ var configSchema = exports_external.object({
 });
 var RESERVE_ORACLE_ABI = [
   {
-    inputs: [],
-    name: "totalChecks",
-    outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function"
-  },
-  {
     inputs: [{ name: "names", type: "string[]" }],
     name: "getPreviousUtilizations",
     outputs: [{ name: "utils", type: "uint256[]" }],
@@ -17128,38 +17121,9 @@ function healthCheckWorkflow(runtime2, payload) {
     runtime2.log(`   ✅ ${slug}: $${tvl.toString()}`);
   }
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE1 STEP 3: Read Oracle State + Previous Utilizations [Call 15 — Sepolia]");
+  runtime2.log("\uD83D\uDCE1 STEP 3: Read Previous Utilizations [Call 15 — Sepolia]");
   const sepoliaClient = getClient(config.chainSelector, true);
-  const checksCall = encodeFunctionData({
-    abi: RESERVE_ORACLE_ABI,
-    functionName: "totalChecks",
-    args: []
-  });
-  let currentChecks = 0;
-  let checkNumber = 1;
-  try {
-    const checksResult = sepoliaClient.callContract(runtime2, {
-      call: encodeCallMsg({
-        from: zeroAddress,
-        to: config.oracleAddress,
-        data: checksCall
-      }),
-      blockNumber: LAST_FINALIZED_BLOCK_NUMBER
-    }).result();
-    if (checksResult.data && checksResult.data.length > 0) {
-      const decoded = decodeFunctionResult({
-        abi: RESERVE_ORACLE_ABI,
-        functionName: "totalChecks",
-        data: bytesToHex(checksResult.data)
-      });
-      currentChecks = Number(decoded);
-      checkNumber = currentChecks + 1;
-    }
-  } catch {
-    runtime2.log("   ⚠️  Could not read totalChecks");
-  }
-  runtime2.log(`   ✅ Current checks: ${currentChecks} → Next: #${checkNumber}`);
-  runtime2.log("   \uD83D\uDCCA Reading previous utilizations (Call 15)...");
+  const checkNumber = Math.floor(runtime2.now() / 1000) % 1e5;
   const protocolNames = config.protocols.map((p) => p.name);
   let previousUtils = config.protocols.map(() => 0n);
   let isFirstRun = true;
@@ -17169,7 +17133,7 @@ function healthCheckWorkflow(runtime2, payload) {
       functionName: "getPreviousUtilizations",
       args: [protocolNames]
     });
-    const prevUtilResult = evmCall(sepoliaClient, runtime2, config.oracleAddress, bytesToHex(new Uint8Array(Buffer.from(prevUtilCall.slice(2), "hex"))));
+    const prevUtilResult = evmCall(sepoliaClient, runtime2, config.oracleAddress, prevUtilCall);
     const decoded = decodeFunctionResult({
       abi: RESERVE_ORACLE_ABI,
       functionName: "getPreviousUtilizations",
@@ -17179,16 +17143,17 @@ function healthCheckWorkflow(runtime2, payload) {
       previousUtils = decoded;
       isFirstRun = decoded.every((v) => v === 0n);
       if (isFirstRun) {
-        runtime2.log("   ℹ️  First run detected — seeding baseline, velocity scoring suppressed");
+        runtime2.log("   ℹ️  First run — seeding baseline, velocity scoring suppressed");
       } else {
-        runtime2.log(`   ✅ Previous utils loaded (${decoded.length} protocols)`);
+        runtime2.log(`   ✅ Previous utilizations loaded (${decoded.length} protocols)`);
         for (let i2 = 0;i2 < decoded.length; i2++) {
           runtime2.log(`      ${protocolNames[i2]}: ${(Number(decoded[i2]) / 100).toFixed(1)}%`);
         }
       }
     }
-  } catch {
-    runtime2.log("   ⚠️  Could not read previous utilizations — treating as first run");
+  } catch (e) {
+    runtime2.log(`   ⚠️  Could not read previous utilizations — treating as first run`);
+    runtime2.log(`      Error: ${e?.message || String(e)}`);
     isFirstRun = true;
   }
   runtime2.log("");
