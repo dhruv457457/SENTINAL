@@ -20,12 +20,11 @@ const CONFIG_FILE = './data/alerts.json';
 const ORACLE_ADDRESS = process.env.ORACLE_ADDRESS || '';
 const PRIVATE_KEY = process.env.PRIVATE_KEY || '';
 const SEPOLIA_RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
-
+const GUARD_ADDRESS = process.env.GUARD_ADDRESS || '0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905';
 let onchainReporter = null;
 if (ORACLE_ADDRESS && PRIVATE_KEY) {
     const pk = PRIVATE_KEY.startsWith('0x') ? PRIVATE_KEY : `0x${PRIVATE_KEY}`;
-    onchainReporter = createOnchainReporter(ORACLE_ADDRESS, pk, SEPOLIA_RPC);
-    console.log(`📝 Onchain reporter enabled → ${ORACLE_ADDRESS}`);
+    onchainReporter = createOnchainReporter(ORACLE_ADDRESS, pk, SEPOLIA_RPC, GUARD_ADDRESS); console.log(`📝 Onchain reporter enabled → ${ORACLE_ADDRESS}`);
 } else {
     console.log('⚠️  Onchain reporter disabled (set ORACLE_ADDRESS & PRIVATE_KEY env vars)');
 }
