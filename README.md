@@ -1,563 +1,465 @@
-# HealthCheck - Protocol Reserve Validator
+# 🛡️ SENTINAL — Multi-Chain DeFi Health Monitor
 
-> **Real-Time Protocol Reserve Monitoring**  
-> Automated risk detection using Chainlink Runtime Environment
+> **The missing middleware between DeFi risk signals and automated onchain protection.**
+> Powered by Chainlink CRE · DON-signed reports · Automated circuit breakers.
 
-![License](https://img.shields.io/badge/license-MIT-blue)
-![CRE](https://img.shields.io/badge/Built%20with-Chainlink%20CRE-blue)
-![Status](https://img.shields.io/badge/status-Production%20Ready-green)
+[![Chainlink CRE](https://img.shields.io/badge/Chainlink-CRE-375BD2?logo=chainlink)](https://chain.link)
+[![Sepolia](https://img.shields.io/badge/Network-Sepolia-blue)](https://sepolia.etherscan.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
-## **THE PROBLEM**
+## 📌 The Problem
 
-### **Why This Matters**
+DeFi protocols are blind to systemic risk. When a bank run starts on Aave, utilization can spike 30% in a single block cycle — but there is no automated, trustless mechanism to:
 
-Every day, protocols hold **$100+ Billion** in user deposits. But how do users know these deposits are actually backed by real reserves?
+- Detect the spike across multiple chains simultaneously
+- Cross-reference onchain reserve data against offchain TVL
+- Automatically halt connected protocols before users lose funds
 
-**Real Examples:**
-```
-Luna (2022):
-  ├─ Claimed: $3.5 Billion in Bitcoin reserves
-  ├─ Actual: $0 (reserves were fake)
-  ├─ User impact: $40 BILLION in losses
-  └─ Could have been detected: YES ✅
+Existing monitoring tools are **offchain dashboards** — they alert humans, who then manually execute emergency multisigs. This introduces minutes or hours of lag during the exact moment speed matters most.
 
-FTX (2022):
-  ├─ Claimed: Customer deposits fully backed
-  ├─ Actual: Stole customer funds
-  ├─ User impact: $8 BILLION in losses
-  └─ Could have been detected: YES ✅
+**SENTINAL solves this with Chainlink CRE.**
 
-Celsius (2022):
-  ├─ Claimed: Solvent with adequate collateral
-  ├─ Actual: Insolvent, bet user funds on risky trades
-  ├─ User impact: $3 BILLION in losses
-  └─ Could have been detected: YES ✅
-```
+---
 
-### **The Current Problem**
+## 💡 The Solution
 
-**How protocols work today:**
-```
-Protocol claims: "We have $100M in reserves"
-User checks: Trust me bro 🤝
-Result: Hope the protocol is honest
-Outcome: $40B+ in losses when they're not
-```
+SENTINAL is a fully automated, DON-signed DeFi health monitoring system that:
 
-**Why monitoring is broken:**
-1. ❌ Manual spot checks (happens once a week, if at all)
-2. ❌ Humans monitoring 9-5 (hacks happen 24/7)
-3. ❌ No automated verification (requires human judgment)
-4. ❌ No real-time alerts (discovers problem too late)
-5. ❌ No trustless system (relies on protocol being honest)
+1. **Reads** reserve data across 3 chains using 15 EVM calls per cycle
+2. **Cross-references** onchain data against DeFiLlama TVL via DON consensus
+3. **Detects** utilization velocity spikes (> 5%/cycle = borrow run signal)
+4. **Writes** cryptographically-signed health reports onchain via Chainlink CRE
+5. **Triggers** `SentinalGuard` circuit breakers automatically — no human needed
+6. **Alerts** Discord with per-protocol solvency and velocity data
 
-**The Cost:**
-```
-$150M+ in preventable losses every month
-= $1.8 BILLION annually
-= All because no one is watching 24/7
+Any DeFi protocol can integrate SENTINAL protection in 3 lines of Solidity:
+
+```solidity
+function deposit(uint256 amount) external {
+    require(GUARD.isSafe(address(this)), "SENTINAL: circuit breaker active");
+    // ... rest of deposit logic
+}
 ```
 
 ---
 
-## **THE SOLUTION: HEALTHCHECK**
-
-### **What HealthCheck Does**
-
-HealthCheck is an **automated, trustless reserve validator** that:
+## 🏗️ Architecture
 
 ```
-✅ Monitors protocols 24/7 (no human intervention)
-✅ Verifies reserves every 30 seconds
-✅ Detects reserve mismatches instantly
-✅ Triggers safeguards automatically
-✅ Provides onchain proof of execution
-✅ Works across multiple protocols
-```
-
-### **How It Works**
-
-```
-EVERY 30 SECONDS:
-
-Step 1: Read Protocol State (Onchain)
-├─ Query Aave contract: "What is TVL?"
-├─ Query reserve vault: "How much balance?"
-└─ Get consensus from multiple nodes
-
-Step 2: Fetch Reserve Data (Offchain)
-├─ Call Aave API: "What reserves do you claim?"
-├─ Call Chainlink feeds: "What are current prices?"
-└─ Aggregate from multiple sources
-
-Step 3: Calculate Reserve Ratio
-├─ Formula: actual_reserves / claimed_reserves
-├─ Threshold: Must be >= 100%
-├─ Example: 
-│  ├─ Claimed: $100M
-│  ├─ Actual: $98M
-│  ├─ Ratio: 98%
-│  └─ Status: 🔴 ALERT (below 100%)
-
-Step 4: Trigger Safeguards (If Mismatch)
-├─ Emit warning event onchain
-├─ Trigger protocol pause mechanism
-├─ Alert governance
-└─ Send notifications to users
-
-Step 5: Log Everything (Onchain Proof)
-├─ Block number
-├─ Timestamp
-├─ Prices used
-├─ Reserve amounts
-├─ Action taken
-└─ Cryptographic proof
-```
-
-### **The Real Difference**
-
-```
-BEFORE HealthCheck:
-  Sunday 3 PM: Manual check "Reserves look good"
-  Tuesday 2 AM: Exploit happens (no one watching)
-  Wednesday 9 AM: "OH NO! Reserves gone!"
-  Result: $2B in losses 💀
-
-AFTER HealthCheck:
-  Tuesday 2 AM: Exploit starts
-  Tuesday 2:00:15 AM: HealthCheck detects mismatch
-  Tuesday 2:00:30 AM: Safeguard pauses protocol
-  Tuesday 2:01 AM: Users' funds protected
-  Result: $0 in losses ✅
+┌─────────────────────────────────────────────────────────────────┐
+│                     CHAINLINK CRE WORKFLOW                       │
+│                    (healthcheck-monitor/index.ts)                │
+│                                                                  │
+│  ┌──────────┐   ┌──────────────┐   ┌───────────┐   ┌────────┐  │
+│  │   CRON   │→  │  EVM READ    │→  │   HTTP    │→  │  DON   │  │
+│  │ Trigger  │   │  15 Calls    │   │ DeFiLlama │   │Consensus│  │
+│  │  60s     │   │  3 Chains    │   │  TVL API  │   │ Median │  │
+│  └──────────┘   └──────────────┘   └───────────┘   └────────┘  │
+│                        │                                  │      │
+│              ┌─────────▼──────────────────────────────────▼──┐  │
+│              │         RISK ENGINE                            │  │
+│              │  Solvency + Velocity + Cross-Reference         │  │
+│              └─────────────────────┬──────────────────────────┘  │
+│                                    │                             │
+│                    ┌───────────────▼──────────────┐             │
+│                    │      EVM WRITE (DON-signed)   │             │
+│                    │   ReserveOracleV2.onReport()  │             │
+│                    └───────────────────────────────┘             │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+              ┌────────────────▼────────────────┐
+              │         SEPOLIA TESTNET          │
+              │                                  │
+              │  ┌─────────────────────────────┐ │
+              │  │     ReserveOracleV2          │ │
+              │  │  · Aggregate health reports  │ │
+              │  │  · Per-protocol solvency     │ │
+              │  │  · Velocity baselines        │ │
+              │  │  · previousUtilization[]     │ │
+              │  └──────────────┬──────────────┘ │
+              │                 │                  │
+              │  ┌──────────────▼──────────────┐  │
+              │  │      SentinalGuard           │  │
+              │  │  · Open registry             │  │
+              │  │  · Circuit breaker           │  │
+              │  │  · isSafe(address)           │  │
+              │  └──────────────┬──────────────┘  │
+              │                 │                  │
+              │  ┌──────────────▼──────────────┐  │
+              │  │       MockVault              │  │
+              │  │  · Deposit/withdraw gated    │  │
+              │  │  · 3-line integration demo   │  │
+              │  └─────────────────────────────┘  │
+              └─────────────────────────────────────┘
+                               │
+              ┌────────────────▼────────────────┐
+              │         ALERT SERVER             │
+              │      (server/server.mjs)         │
+              │  · Receives CRE workflow result  │
+              │  · Submits protocol data onchain │
+              │  · Discord / Telegram alerts     │
+              │  · REST API for dashboard        │
+              └────────────────┬────────────────┘
+                               │
+              ┌────────────────▼────────────────┐
+              │        NEXT.JS DASHBOARD         │
+              │     (dashboard/app/page.tsx)     │
+              │  · Live protocol solvency        │
+              │  · Risk gauge + history chart    │
+              │  · Guard panel + VaultCard       │
+              │  · Auto-refresh every 15s        │
+              └─────────────────────────────────┘
 ```
 
 ---
 
-## **ARCHITECTURE**
+## 🔗 Chainlink CRE — All 7 Capabilities Used
 
-### **High-Level Flow**
+| Capability | Usage | Detail |
+|---|---|---|
+| **Cron Trigger** | Every 60 seconds | Automated health checks, no manual intervention |
+| **EVM Read** | Calls 1–14 | Reserve data across Ethereum, Arbitrum, Base |
+| **HTTP GET** | DeFiLlama API | `/tvl/aave-v3` and `/tvl/lido` |
+| **DON Consensus** | Median aggregation | Trustless TVL cross-reference |
+| **EVM Write** | DON-signed report | `ReserveOracleV2.onReport()` on Sepolia |
+| **DON Time** | `runtime.now()` | Tamper-proof timestamps in reports |
+| **HTTP POST** | Discord webhook | Real-time alerts with velocity data |
 
-```
-┌─────────────────────────────────────────────┐
-│        CRE WORKFLOW (TypeScript)            │
-├─────────────────────────────────────────────┤
-│                                             │
-│  TRIGGER: Cron (every 30 seconds)          │
-│       ↓                                     │
-│  ACTION 1: chainRead (Aave contract)       │
-│       ↓                                     │
-│  ACTION 2: API fetch (reserve data)        │
-│       ↓                                     │
-│  ACTION 3: Compute (reserve ratio)         │
-│       ↓                                     │
-│  ACTION 4: Consensus (BFT aggregate)       │
-│       ↓                                     │
-│  ACTION 5: chainWrite (emit result)        │
-│       ↓                                     │
-│  TARGET: Smart contract on Sepolia         │
-│                                             │
-└─────────────────────────────────────────────┘
-```
-
-### **Component Breakdown**
-
-| Component | Purpose | Tech |
-|-----------|---------|------|
-| **CRE Workflow** | Orchestrate monitoring | TypeScript + CRE SDK |
-| **Smart Contracts** | Store results, trigger safeguards | Solidity |
-| **Cron Trigger** | Run every 30 seconds | CRE Cron Capability |
-| **chainRead** | Query protocol state | EVM Client |
-| **API Fetch** | Get reserve data | HTTP Client |
-| **Consensus** | Multi-node agreement | BFT Consensus |
-| **chainWrite** | Emit results onchain | EVM Write Capability |
-
----
-
-## **TECH STACK**
+### EVM Call Budget (15/15 used)
 
 ```
-Frontend/CLI:
-├─ CRE CLI (Command-line tool)
-├─ Bun (Runtime)
-└─ TypeScript (Language)
-
-Backend (CRE Workflow):
-├─ @chainlink/cre-sdk (Core library)
-├─ Viem (ABI encoding/decoding)
-├─ Zod (Config validation)
-└─ Node.js (Runtime)
-
-Blockchain:
-├─ Solidity ^0.8.0 (Smart contracts)
-├─ Ethereum Sepolia (Testnet)
-├─ Hardhat (Contract deployment & testing)
-└─ Ethers.js (Web3 library)
-
-Testing:
-├─ Jest (Unit tests)
-├─ Hardhat (Integration tests)
-├─ Tenderly Virtual TestNets (Simulation)
-└─ Mainnet fork (Realistic testing)
-
-Monitoring:
-├─ Tenderly Dashboard (CRE execution logs)
-├─ Etherscan (Contract events)
-└─ CRE UI (Workflow monitoring)
+Calls  1–4:   Aave V3 Ethereum  (getReserveData + aToken supply + USDC balance + debt supply)
+Calls  5–8:   Aave V3 Arbitrum  (same 4 calls)
+Calls  9–12:  Aave V3 Base      (same 4 calls)
+Calls 13–14:  Lido stETH        (getTotalPooledEther + totalSupply)
+Call  15:     ReserveOracleV2.getPreviousUtilizations()  ← velocity detection
 ```
 
 ---
 
-## **SMART CONTRACTS NEEDED**
+## 📊 What Gets Stored Onchain
 
-### **Contract 1: ReserveValidator.sol**
+Every 60 seconds, **two transactions** hit Sepolia:
+
+**TX 1 — DON-signed aggregate report** → `ReserveOracleV2.onReport()`
 ```
-Purpose: Store reserve data and trigger safeguards
-Functions:
-  ├─ recordReserveCheck() - Store check result
-  ├─ triggerEmergencyPause() - Pause protocol
-  ├─ updateThreshold() - Adjust safety threshold
-  └─ getReserveHistory() - Query past checks
-
-Events:
-  ├─ ReserveCheckCompleted
-  ├─ ReserveMismatchDetected
-  ├─ EmergencyPauseTriggered
-  └─ ThresholdUpdated
+totalReservesUSD   $4,462,634,659
+totalClaimedUSD    $4,462,625,982
+globalRatio        10000 (basis points)
+riskScore          0–100
+severity           HEALTHY / WARNING / CRITICAL
+anomalyDetected    bool
+checkNumber        sequential
+timestamp          DON-attested
 ```
 
-### **Contract 2: ReserveAggregator.sol**
+**TX 2 — Per-protocol data** → `ReserveOracleV2.submitProtocolData()`
 ```
-Purpose: Aggregate reserve data from multiple sources
-Functions:
-  ├─ addProtocol() - Add protocol to monitor
-  ├─ recordAggregatedData() - Store aggregated reserves
-  ├─ getProtocolReserves() - Query current reserves
-  └─ getReserveRatio() - Calculate health ratio
-
-Data Structures:
-  ├─ ProtocolData (name, address, threshold)
-  ├─ ReserveCheckpoint (timestamp, claimed, actual, ratio)
-  └─ ProtocolStatus (healthy, warning, critical)
-```
-
-### **Contract 3: SafeguardController.sol**
-```
-Purpose: Execute automatic safeguards when risk detected
-Functions:
-  ├─ pauseBorrowing() - Stop new loans
-  ├─ pauseWithdrawals() - Stop user withdrawals
-  ├─ triggerLiquidationMode() - Liquidate risky positions
-  ├─ requestGovernanceVote() - Escalate to governance
-  └─ resumeNormal() - Return to normal operation
-
-Events:
-  ├─ BorrowingPaused
-  ├─ WithdrawalsPaused
-  ├─ LiquidationModeTriggered
-  └─ NormalOperationResumed
+For each of 4 protocols:
+  name             "Aave V3 USDC (Ethereum)"
+  solvencyRatio    10000 bps
+  utilization      6436 bps (64.36%)
+  velocityBps      delta from last check
+  velocityNegative direction
+  → also stores previousUtilization for next CRE call #15
+  → calls SentinalGuard.updateProtocolStatus() per protocol
 ```
 
 ---
 
-## **TESTING STRATEGY**
+## ⚡ Velocity Detection
 
-### **No Mocks - Real Integration Testing**
+SENTINAL implements a novel **onchain velocity detection** pattern:
 
-```
-UNIT TESTS (Jest - TypeScript):
-├─ Reserve ratio calculation accuracy
-├─ Config validation
-├─ Data aggregation logic
-├─ Error handling
-└─ Edge cases (div by zero, negative values)
-
-INTEGRATION TESTS (Hardhat):
-├─ Contract deployment
-├─ CRE writes data to contract
-├─ Safeguard execution
-├─ Event emissions
-└─ Contract state transitions
-
-SIMULATION TESTS (Tenderly Virtual TestNets):
-├─ Fork mainnet state
-├─ Run CRE workflow on real data
-├─ Verify reads match expected values
-├─ Test writes execute correctly
-├─ Measure gas costs
-└─ Check event logs
-
-SCENARIO TESTS (Mainnet Fork):
-├─ Simulate reserve mismatch (Luna scenario)
-├─ Simulate gradual reserve drain (FTX scenario)
-├─ Simulate oracle attack
-├─ Test multi-chain execution
-└─ Verify safeguard triggers correctly
-```
-
-### **Testing Metrics**
+1. Every check, CRE call #15 reads `previousUtilization[]` from `ReserveOracleV2`
+2. Current utilization is compared against stored baseline
+3. If delta > 500 bps (5%) in one cycle → `VelocityAlert` event emitted
+4. Risk score increases by +15 per alert, +20 for extreme spikes (>15%)
+5. `SentinalGuard` triggers automatic circuit breaker at CRITICAL threshold
 
 ```
-Success Criteria:
-├─ Detection accuracy: > 99%
-├─ False positive rate: < 1%
-├─ Detection latency: < 30 seconds
-├─ Safeguard execution: < 15 seconds
-├─ Data consistency: 100%
-└─ Uptime: > 99.9%
+Check N:    Util = 64.3%  → stored onchain
+Check N+1:  Util = 64.4%  → velocity = 0.1% (safe)
+Check N+1:  Util = 72.3%  → velocity = 8.0% ⚡ ALERT → circuit breaker
 ```
 
 ---
 
-## **PROJECT STRUCTURE**
+## 🏛️ Smart Contracts
+
+| Contract | Address (Sepolia) | Purpose |
+|---|---|---|
+| `ReserveOracleV2` | [`0x71f540d7dac0fc71b6652b1d8aee9012638095ca`](https://sepolia.etherscan.io/address/0x71f540d7dac0fc71b6652b1d8aee9012638095ca) | DON report receiver + velocity store |
+| `SentinalGuard` | [`0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905`](https://sepolia.etherscan.io/address/0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905) | Open-registry circuit breaker |
+| `MockVault` | [`0x29Ac4504A053f8Ac60127366fFF69f91D4F32Bf58`](https://sepolia.etherscan.io/address/0x29Ac4504A053f8Ac60127366fFF69f91D4F32Bf58) | Integration demo — 3-line guard |
+
+### Monitored Protocols
+
+| Protocol | Chain | Pool |
+|---|---|---|
+| Aave V3 USDC | Ethereum Mainnet | `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2` |
+| Aave V3 USDC | Arbitrum One | `0x794a61358D6845594F94dc1DB02A252b5b4814aD` |
+| Aave V3 USDC | Base | `0xA238Dd80C259a72e81d7e4664a9801593F98d1c5` |
+| Lido stETH | Ethereum Mainnet | `0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84` |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+```bash
+node >= 18
+npm >= 9
+cre CLI installed (npm install -g @chainlink/cre-cli)
+```
+
+### 1. Clone
+
+```bash
+git clone https://github.com/dhruv457457/SENTINAL.git
+cd SENTINAL
+```
+
+### 2. Environment Setup
+
+```bash
+# server/.env
+ORACLE_ADDRESS=0x71f540d7dac0fc71b6652b1d8aee9012638095ca
+GUARD_ADDRESS=0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905
+VAULT_ADDRESS=0x29Ac4504A053f8Ac60127366fFF69f91D4F32Bf58
+PRIVATE_KEY=your_sepolia_private_key
+SEPOLIA_RPC=https://ethereum-sepolia-rpc.publicnode.com
+DISCORD_WEBHOOK_URL=your_discord_webhook
+```
+
+```bash
+# dashboard/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+### 3. Install Dependencies
+
+```bash
+# Server
+cd server && npm install
+
+# Dashboard
+cd ../dashboard && npm install
+
+# CRE workflow
+cd ../cre-workflow/healthcheck-monitor && npm install
+```
+
+### 4. Configure CRE Staging Settings
+
+```yaml
+# cre-workflow/healthcheck-monitor/staging-settings.yaml
+rpcs:
+  - chain-name: ethereum-testnet-sepolia
+    url: https://ethereum-sepolia-rpc.publicnode.com
+  - chain-name: ethereum-mainnet
+    url: https://ethereum-rpc.publicnode.com
+  - chain-name: ethereum-mainnet-arbitrum-1
+    url: https://arbitrum-one-rpc.publicnode.com
+  - chain-name: ethereum-mainnet-base-1
+    url: https://base-mainnet.g.alchemy.com/v2/YOUR_KEY
+```
+
+### 5. Run
+
+**Terminal 1 — Alert Server:**
+```bash
+cd server
+node server.mjs
+# API running at http://localhost:3001
+```
+
+**Terminal 2 — Dashboard:**
+```bash
+cd dashboard
+npm run dev
+# Dashboard at http://localhost:3000
+```
+
+**Terminal 3 — CRE Runner (simulate):**
+```bash
+node scripts/run-and-report.mjs
+```
+
+**Terminal 3 — CRE Runner (broadcast — real txs):**
+```bash
+node scripts/run-and-report.mjs --broadcast
+```
+
+**Or run the CRE workflow directly:**
+```bash
+cd cre-workflow/healthcheck-monitor
+cre workflow simulate healthcheck
+cre workflow simulate healthcheck --broadcast
+```
+
+---
+
+## 📁 Project Structure
 
 ```
-healthcheck/
-├── .github/
-│   └── workflows/
-│       ├── test.yml (CI/CD)
-│       └── deploy.yml (Deployment)
-│
-├── contracts/
-│   ├── ReserveValidator.sol
-│   ├── ReserveAggregator.sol
-│   ├── SafeguardController.sol
-│   ├── test/
-│   │   ├── ReserveValidator.test.ts
-│   │   ├── ReserveAggregator.test.ts
-│   │   └── SafeguardController.test.ts
-│   └── deployments/
-│       └── deploy.ts
+SENTINAL/
+├── contracts/                          # Solidity smart contracts
+│   ├── ReserveOracleV2.sol             # ← Chainlink CRE receiver
+│   ├── SentinalGuard.sol               # ← Circuit breaker registry
+│   ├── ISentinalGuard.sol              # ← Integration interface
+│   ├── MockVault.sol                   # ← 3-line integration demo
+│   └── EmergencyController.sol
 │
 ├── cre-workflow/
-│   ├── src/
-│   │   ├── main.ts (Entry point)
-│   │   ├── config.ts (Configuration)
-│   │   ├── types.ts (TypeScript types)
-│   │   ├── services/
-│   │   │   ├── reserveReader.ts (Read protocol state)
-│   │   │   ├── apiClient.ts (Fetch reserve data)
-│   │   │   ├── calculator.ts (Calculate ratios)
-│   │   │   └── safeguardTrigger.ts (Execute safeguards)
-│   │   └── utils/
-│   │       ├── logger.ts
-│   │       ├── validator.ts
-│   │       └── helpers.ts
-│   ├── config/
-│   │   ├── config.staging.json
-│   │   ├── config.production.json
-│   │   └── secrets.yaml
-│   ├── tests/
-│   │   ├── unit/
-│   │   │   ├── calculator.test.ts
-│   │   │   └── validator.test.ts
-│   │   └── integration/
-│   │       └── workflow.test.ts
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── workflow.yaml
+│   └── healthcheck-monitor/
+│       ├── index.ts                    # ← CRE workflow (ALL 7 capabilities)
+│       ├── staging-settings.yaml       # ← RPC configuration
+│       └── contracts/abi/             # ← Aave, Lido, ERC20 ABIs
 │
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── SETUP.md
-│   ├── API.md
-│   ├── TESTING.md
-│   └── DEPLOYMENT.md
+├── server/
+│   ├── server.mjs                      # ← Alert server + onchain reporter
+│   └── onchain-reporter.mjs            # ← submitProtocolData() caller
 │
-├── test/
-│   ├── scenarios/
-│   │   ├── luna-hack.test.ts
-│   │   ├── ftx-scenario.test.ts
-│   │   ├── gradual-drain.test.ts
-│   │   └── oracle-attack.test.ts
-│   └── helpers/
-│       ├── setup.ts
-│       └── fixtures.ts
+├── scripts/
+│   └── run-and-report.mjs              # ← Continuous runner with live logs
 │
-├── .env.example
-├── .gitignore
-├── hardhat.config.ts
-├── package.json
-├── README.md
-├── LICENSE
-└── CONTRIBUTING.md
+├── dashboard/
+│   └── app/
+│       ├── page.tsx                    # ← Main dashboard
+│       └── components/
+│           ├── GuardPanel.tsx          # ← Circuit breaker status
+│           ├── VaultCard.tsx           # ← Live vault data
+│           ├── ProtocolCard.tsx        # ← Per-protocol solvency + velocity
+│           └── HistoryChart.tsx        # ← Risk score over time
+│
+└── README.md
 ```
 
 ---
 
-## **QUICK START**
+## 🔍 Live Data (at time of submission)
 
-### **Prerequisites**
-```bash
-# Check versions
-node --version  # v18+
-bun --version   # v1.2.21+
-npm --version   # v9+
-
-# Install CRE CLI
-npm install -g @chainlink/cre-cli
-
-# Create CRE account
-# Visit: https://cre.chain.link
 ```
-
-### **Setup**
-```bash
-# Clone repo
-git clone https://github.com/chainlink-hackathon/healthcheck.git
-cd healthcheck
-
-# Install dependencies
-npm install
-cd cre-workflow
-bun install
-cd ..
-
-# Setup environment
-cp .env.example .env
-# Add your Sepolia private key to .env
-
-# Run tests
-npm run test
-
-# Deploy contracts
-npm run deploy:sepolia
-
-# Start CRE workflow
-cd cre-workflow
-cre workflow simulate healthcheck-monitor --target staging-settings
+Protocols monitored:    4
+Chains:                 3 (Ethereum, Arbitrum, Base)
+Aggregate reserves:     $4.46B
+Aave V3 TVL:           $26.3B (DeFiLlama, DON consensus)
+Lido stETH TVL:        $18.8B (DeFiLlama, DON consensus)
+Total monitored:        ~$45B
+Checks completed:       16+
+Velocity detection:     ACTIVE (baseline seeded, deltas tracked)
+Circuit breaker:        🟢 CLOSED — SAFE
+Registered protocols:   2
 ```
 
 ---
 
-## **DEPLOYMENT CHECKLIST**
+## 🛡️ SentinalGuard — Protocol Integration
+
+Any DeFi protocol can integrate SENTINAL protection with 3 lines:
+
+```solidity
+// 1. Import the interface
+import "./ISentinalGuard.sol";
+
+// 2. Set the guard address
+ISentinalGuard constant GUARD = ISentinalGuard(0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905);
+
+// 3. Gate your transactions
+function deposit(uint256 amount) external {
+    require(GUARD.isSafe(address(this)), "SENTINAL: circuit breaker active");
+    // ... rest of logic
+}
+```
+
+**Trigger conditions:**
+
+| Condition | Action |
+|---|---|
+| Severity = CRITICAL (risk > 60) | Global pause — all registered protocols halt |
+| Protocol solvency < 90% | Per-protocol pause |
+| Velocity spike > 5%/cycle | VelocityAlert event + risk score increase |
+| Velocity spike > 15%/cycle | +35 risk score, extreme alert |
+
+---
+
+## 📡 API Reference
+
+The alert server exposes a REST API for the dashboard:
 
 ```
-Before Mainnet:
-□ All tests passing
-□ Contract audit (optional for hackathon)
-□ CRE workflow stress tested
-□ Gas optimization verified
-□ Safeguard mechanisms tested
-□ Monitoring setup complete
-□ Documentation updated
-□ Team trained on operation
-
-Deployment:
-□ Deploy contracts to Sepolia testnet
-□ Deploy CRE workflow
-□ Activate cron trigger
-□ Monitor first 24 hours
-□ Enable alerts
-□ Document addresses
-□ Announce launch
+GET  /api/latest              Latest health check result
+GET  /api/history             Last 100 checks
+GET  /api/guard/status        SentinalGuard onchain state
+GET  /api/vault/status        MockVault live data from Sepolia
+GET  /api/alerts/config       Discord/Telegram config
+PUT  /api/alerts/config       Update alert config
+POST /api/alerts/test         Send test alert
+POST /api/report              Submit CRE workflow result (called by runner)
 ```
 
 ---
 
-## **MONITORING & ALERTS**
+## 🧪 End-to-End Test
 
-### **What to Monitor**
-
-```
-Real-Time Metrics:
-├─ Reserve ratio per protocol
-├─ Detection latency
-├─ Safeguard execution time
-├─ False positive rate
-├─ API availability
-├─ Gas prices
-└─ Network congestion
-
-Health Checks:
-├─ Cron trigger firing regularly
-├─ CRE nodes reaching consensus
-├─ Contract writes succeeding
-├─ Events emitting correctly
-└─ No stuck transactions
-```
-
-### **Alert Conditions**
-
-```
-Critical (Page Oncall):
-├─ Reserve ratio < 80%
-├─ CRE workflow failed
-├─ Contract write failed
-└─ Multiple protocols at risk
-
-Warning (Slack):
-├─ Reserve ratio < 90%
-├─ API latency > 10s
-├─ Gas prices spiking
-└─ Unusual pattern detected
-
-Info (Dashboard):
-├─ Normal operation
-├─ Regular checks completing
-├─ All systems healthy
-└─ Performance metrics
-```
-
----
-
-## **CONTRIBUTING**
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md)
+Run the full test suite against deployed Sepolia contracts:
 
 ```bash
-# Fork the repo
-git clone https://github.com/YOUR_USERNAME/healthcheck.git
+cd scripts
+node test-e2e.mjs
+```
 
-# Create feature branch
-git checkout -b feature/your-feature
-
-# Make changes, test thoroughly
-npm run test
-
-# Push and create PR
-git push origin feature/your-feature
+Expected output:
+```
+✅ Test 1: Oracle reads totalChecks
+✅ Test 2: Deposits accepted when circuit breaker CLOSED
+✅ Test 3: simulateCritical() triggers CRITICAL severity
+✅ Test 4: Guard global pause activated
+✅ Test 5: Deposits revert — SENTINAL: circuit breaker active
+✅ Test 6: manualUnpause() restores normal operation
 ```
 
 ---
 
-## **LICENSE**
+## 🏆 Prize Track
 
-MIT License - See [LICENSE](LICENSE)
+This project targets the **Risk & Compliance** track ($16,000):
 
----
+> *"For projects focused on monitoring, safeguards, and automated controls across onchain systems. This includes applications that detect risk, verify reserves or system health, and trigger predefined responses based on real-world or onchain conditions."*
 
-## **TEAM**
-
-Built for **Chainlink Convergence Hackathon 2026**  
-**Risk & Compliance Track**  
-Prize Pool: $16,000
-
----
-
-## **RESOURCES**
-
-- 📖 [CRE Documentation](https://docs.chain.link/chainlink-automation/chainlink-runtime-environment)
-- 🔗 [Chainlink Docs](https://docs.chain.link/)
-- 🧪 [Hardhat Docs](https://hardhat.org/)
-- 📊 [Tenderly Dashboard](https://tenderly.co/)
-- 💬 [Discord Support](https://discord.gg/chainlink)
+**Directly addresses all listed use cases:**
+- ✅ Automated risk monitoring (CRE workflow every 60s)
+- ✅ Real-time reserve health checks (15 EVM calls, 3 chains)
+- ✅ Protocol safeguard triggers (SentinalGuard circuit breaker)
 
 ---
 
-## **STATUS**
+## 🧑‍💻 Author
 
-```
-Development: ✅ In Progress
-Testing: ✅ Comprehensive
-Documentation: ✅ Complete
-Deployment Ready: ✅ Yes (Sepolia testnet)
-Production Ready: 🔄 Post-Hackathon
-```
+**Dhruv Pancholi**
+- GitHub: [@dhruv457457](https://github.com/dhruv457457)
+- Email: dpancholi.pp123@gmail.com
 
 ---
 
-**Always watching. Always protecting.** 🛡️
+## 📜 License
 
-*HealthCheck - Making DeFi protocols trustworthy, one reserve at a time.*
+MIT — see [LICENSE](LICENSE)
+
+---
+
+## 🔗 Links
+
+- **Repo:** https://github.com/dhruv457457/SENTINAL
+- **Oracle (Sepolia):** https://sepolia.etherscan.io/address/0x71f540d7dac0fc71b6652b1d8aee9012638095ca
+- **Guard (Sepolia):** https://sepolia.etherscan.io/address/0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905
+- **Vault (Sepolia):** https://sepolia.etherscan.io/address/0x29Ac4504A053f8Ac60127366fFF69f91D4F32Bf58
+- **Discord Alerts:** https://discord.gg/Wq8arAHf
+
+---
+
+*Built for Chainlink Convergence Hackathon · Feb–Mar 2026*
