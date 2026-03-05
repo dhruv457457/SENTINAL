@@ -2134,5 +2134,521 @@
     "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "velocityAlerts": [],
     "receivedAt": "2026-03-03T08:44:47.718Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4428721178",
+      "totalClaimedUSD": "4428672431",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": true,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 18,
+    "isFirstRun": false,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26965112316"
+      },
+      {
+        "slug": "lido",
+        "tvl": "19226544333"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3757397952 | Liq=$1344972851 | Borrows=$2412462880 | Util=64.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6420,
+        "velocityAlert": false,
+        "velocityBps": 16,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281184763 | Liq=$118222676 | Borrows=$162962975 | Util=58.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5795,
+        "velocityAlert": false,
+        "velocityBps": 378,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$390089716 | Liq=$102482224 | Borrows=$287617572 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7373,
+        "velocityAlert": true,
+        "velocityBps": 664,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9272930 ETH | Pooled=9272930 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 10,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x6a8c3ca145b748229b074ee2853d527032212720c9b4e7c838d3275ce27e9b3f",
+    "velocityAlerts": [
+      {
+        "currentUtilBps": 7373,
+        "name": "Aave V3 USDC (Base)",
+        "prevUtilBps": 8037,
+        "velocityBps": 664,
+        "velocityNegative": true
+      }
+    ],
+    "receivedAt": "2026-03-04T16:56:40.130Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4428721178",
+      "totalClaimedUSD": "4428672431",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": true,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 19,
+    "isFirstRun": false,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26965112316"
+      },
+      {
+        "slug": "lido",
+        "tvl": "19226544333"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3757397952 | Liq=$1344972851 | Borrows=$2412462880 | Util=64.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6420,
+        "velocityAlert": false,
+        "velocityBps": 16,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281184763 | Liq=$118222676 | Borrows=$162962975 | Util=58.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5795,
+        "velocityAlert": false,
+        "velocityBps": 378,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$390089716 | Liq=$102482224 | Borrows=$287617572 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7373,
+        "velocityAlert": true,
+        "velocityBps": 664,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9272930 ETH | Pooled=9272930 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 10,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xce2062f86199342cd5cba5037729491b7b12f53b1c1f556a9a672954384b8ccf",
+    "velocityAlerts": [
+      {
+        "currentUtilBps": 7373,
+        "name": "Aave V3 USDC (Base)",
+        "prevUtilBps": 8037,
+        "velocityBps": 664,
+        "velocityNegative": true
+      }
+    ],
+    "receivedAt": "2026-03-04T16:58:15.302Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4428721178",
+      "totalClaimedUSD": "4428672431",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": true,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 20,
+    "isFirstRun": false,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26965112316"
+      },
+      {
+        "slug": "lido",
+        "tvl": "19226544333"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3757397952 | Liq=$1344972851 | Borrows=$2412462880 | Util=64.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6420,
+        "velocityAlert": false,
+        "velocityBps": 16,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281184763 | Liq=$118222676 | Borrows=$162962975 | Util=58.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5795,
+        "velocityAlert": false,
+        "velocityBps": 378,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$390089716 | Liq=$102482224 | Borrows=$287617572 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7373,
+        "velocityAlert": true,
+        "velocityBps": 664,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9272930 ETH | Pooled=9272930 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 10,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x901e46359e413910bf3c6f388eb7dd08853e06efe31a4bd4e873438d6aef2856",
+    "velocityAlerts": [
+      {
+        "currentUtilBps": 7373,
+        "name": "Aave V3 USDC (Base)",
+        "prevUtilBps": 8037,
+        "velocityBps": 664,
+        "velocityNegative": true
+      }
+    ],
+    "receivedAt": "2026-03-04T16:59:51.255Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4429525635",
+      "totalClaimedUSD": "4429476764",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": true,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 21,
+    "isFirstRun": false,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26965112316"
+      },
+      {
+        "slug": "lido",
+        "tvl": "19226544333"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3758143526 | Liq=$1345661089 | Borrows=$2412520324 | Util=64.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6419,
+        "velocityAlert": false,
+        "velocityBps": 17,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281243522 | Liq=$118217512 | Borrows=$163026914 | Util=58.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5796,
+        "velocityAlert": false,
+        "velocityBps": 379,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$390089716 | Liq=$102482224 | Borrows=$287617572 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7373,
+        "velocityAlert": true,
+        "velocityBps": 664,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9273398 ETH | Pooled=9273398 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 10,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x360591af7f8c03c3c189a2e04c6aa8c4dc844037d301e3b15444c9ca6e763e66",
+    "velocityAlerts": [
+      {
+        "currentUtilBps": 7373,
+        "name": "Aave V3 USDC (Base)",
+        "prevUtilBps": 8037,
+        "velocityBps": 664,
+        "velocityNegative": true
+      }
+    ],
+    "receivedAt": "2026-03-04T17:01:39.762Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4429268671",
+      "totalClaimedUSD": "4429219785",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": true,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 22,
+    "isFirstRun": false,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26965112316"
+      },
+      {
+        "slug": "lido",
+        "tvl": "19226544333"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3758143526 | Liq=$1345661089 | Borrows=$2412520324 | Util=64.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6419,
+        "velocityAlert": false,
+        "velocityBps": 17,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281243522 | Liq=$118217512 | Borrows=$163026914 | Util=58.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5796,
+        "velocityAlert": false,
+        "velocityBps": 379,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$389832737 | Liq=$102029313 | Borrows=$287813518 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7383,
+        "velocityAlert": true,
+        "velocityBps": 654,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9273398 ETH | Pooled=9273398 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 10,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x1a05ec78dd722cd1064df065d1f6ba767dfed2e85483fa0e96dc5eb1a06e9fdf",
+    "velocityAlerts": [
+      {
+        "currentUtilBps": 7383,
+        "name": "Aave V3 USDC (Base)",
+        "prevUtilBps": 8037,
+        "velocityBps": 654,
+        "velocityNegative": true
+      }
+    ],
+    "receivedAt": "2026-03-04T17:03:15.914Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4429268671",
+      "totalClaimedUSD": "4429219785",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": true,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 23,
+    "isFirstRun": false,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26965112316"
+      },
+      {
+        "slug": "lido",
+        "tvl": "19226544333"
+      }
+    ],
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "details": "Deposits=$3758143526 | Liq=$1345661089 | Borrows=$2412520324 | Util=64.2%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6419,
+        "velocityAlert": false,
+        "velocityBps": 17,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "details": "Deposits=$281243522 | Liq=$118217512 | Borrows=$163026914 | Util=58.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5796,
+        "velocityAlert": false,
+        "velocityBps": 379,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "details": "Deposits=$389832737 | Liq=$102029313 | Borrows=$287813518 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7383,
+        "velocityAlert": true,
+        "velocityBps": 654,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "details": "stETH=9273398 ETH | Pooled=9273398 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 10,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xb6f3cb76858cd4fe1eb0d4cad06d9b1c8f8622381cf99d1414947d973ab46c04",
+    "velocityAlerts": [
+      {
+        "currentUtilBps": 7383,
+        "name": "Aave V3 USDC (Base)",
+        "prevUtilBps": 8037,
+        "velocityBps": 654,
+        "velocityNegative": true
+      }
+    ],
+    "receivedAt": "2026-03-04T17:04:51.058Z"
   }
 ]
