@@ -105,7 +105,57 @@ export const LidoStETH = [
         type: 'function',
     },
 ] as const
-
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// RESERVE ORACLE V2 (SENTINAL)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export const ReserveOracleV2 = [
+    {
+        inputs: [],
+        name: 'getPreviousUtilizations',
+        outputs: [
+            { name: 'names', type: 'string[]' },
+            { name: 'utilizationsBps', type: 'uint256[]' },
+            { name: 'timestamp', type: 'uint256' },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'getLatestReport',
+        outputs: [
+            { name: 'checkNumber', type: 'uint256' },
+            { name: 'timestamp', type: 'uint256' },
+            { name: 'riskScore', type: 'uint8' },
+            { name: 'severity', type: 'uint8' },
+            { name: 'anomalyDetected', type: 'bool' },
+            { name: 'policyHash', type: 'bytes32' },
+        ],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'checkNumber',
+        outputs: [{ name: '', type: 'uint256' }],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'activePolicyHash',
+        outputs: [{ name: '', type: 'bytes32' }],
+        stateMutability: 'view',
+        type: 'function',
+    },
+    {
+        inputs: [],
+        name: 'activePolicyVersion',
+        outputs: [{ name: '', type: 'string' }],
+        stateMutability: 'view',
+        type: 'function',
+    },
+] as const
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ERC4626 Vault (MakerDAO sDAI)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

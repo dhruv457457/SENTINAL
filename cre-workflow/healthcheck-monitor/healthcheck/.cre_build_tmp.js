@@ -16676,11 +16676,54 @@ var sendErrorResponse = (error) => {
   }
   hostBindings.sendResponse(payload);
 };
+var configSchema = exports_external.object({
+  schedule: exports_external.string(),
+  oracleAddress: exports_external.string(),
+  chainSelector: exports_external.string(),
+  discordWebhookUrl: exports_external.string().optional(),
+  arbitrumOracleAddress: exports_external.string().optional(),
+  baseOracleAddress: exports_external.string().optional(),
+  protocols: exports_external.array(exports_external.object({
+    name: exports_external.string(),
+    type: exports_external.string(),
+    poolAddress: exports_external.string(),
+    assetAddress: exports_external.string(),
+    chainName: exports_external.string(),
+    isTestnet: exports_external.boolean(),
+    decimals: exports_external.number(),
+    defiLlamaSlug: exports_external.string()
+  }))
+});
 init_exports();
 var zeroAddress = "0x0000000000000000000000000000000000000000";
 init_decodeFunctionResult();
 init_encodeAbiParameters();
 init_encodeFunctionData();
+init_toBytes();
+init_keccak256();
+var clientCache = {};
+function getClient(chainName, isTestnet) {
+  const key = `${chainName}:${isTestnet}`;
+  if (!clientCache[key]) {
+    const network248 = getNetwork({
+      chainFamily: "evm",
+      chainSelectorName: chainName,
+      isTestnet
+    });
+    clientCache[key] = new ClientCapability(network248.chainSelector.selector);
+  }
+  return clientCache[key];
+}
+function evmCall(client, runtime2, to, data) {
+  return client.callContract(runtime2, {
+    call: encodeCallMsg({
+      from: zeroAddress,
+      to,
+      data
+    }),
+    blockNumber: LAST_FINALIZED_BLOCK_NUMBER
+  }).result().data;
+}
 var AavePool = [
   {
     inputs: [{ name: "asset", type: "address" }],
@@ -16776,63 +16819,64 @@ var ERC4626 = [
     type: "function"
   }
 ];
-var configSchema = exports_external.object({
-  schedule: exports_external.string(),
-  oracleAddress: exports_external.string(),
-  chainSelector: exports_external.string(),
-  discordWebhookUrl: exports_external.string().optional(),
-  protocols: exports_external.array(exports_external.object({
-    name: exports_external.string(),
-    type: exports_external.string(),
-    poolAddress: exports_external.string(),
-    assetAddress: exports_external.string(),
-    chainName: exports_external.string(),
-    isTestnet: exports_external.boolean(),
-    decimals: exports_external.number(),
-    defiLlamaSlug: exports_external.string()
-  }))
-});
-var RESERVE_ORACLE_ABI = [
+var MULTICALL3_ADDRESS = "0xcA11bde05977b3631167028862bE2a173976CA11";
+var MULTICALL3_ABI = [
   {
-    inputs: [{ name: "names", type: "string[]" }],
-    name: "getPreviousUtilizations",
-    outputs: [{ name: "utils", type: "uint256[]" }],
-    stateMutability: "view",
+    inputs: [
+      {
+        components: [
+          { name: "target", type: "address" },
+          { name: "allowFailure", type: "bool" },
+          { name: "callData", type: "bytes" }
+        ],
+        name: "calls",
+        type: "tuple[]"
+      }
+    ],
+    name: "aggregate3",
+    outputs: [
+      {
+        components: [
+          { name: "success", type: "bool" },
+          { name: "returnData", type: "bytes" }
+        ],
+        name: "returnData",
+        type: "tuple[]"
+      }
+    ],
+    stateMutability: "payable",
     type: "function"
   }
 ];
-var VELOCITY_ALERT_THRESHOLD = 500;
-function decodeBody(body) {
-  if (typeof body === "string")
-    return body;
-  const bytes = new Uint8Array(body);
-  let str = "";
-  for (let i2 = 0;i2 < bytes.length; i2++) {
-    str += String.fromCharCode(bytes[i2]);
-  }
-  return str;
-}
-function evmCall(client, runtime2, to, data) {
-  return client.callContract(runtime2, {
+function multicall(client, runtime2, requests) {
+  const callData = encodeFunctionData({
+    abi: MULTICALL3_ABI,
+    functionName: "aggregate3",
+    args: [
+      requests.map((r) => ({
+        target: r.target,
+        allowFailure: r.allowFailure ?? true,
+        callData: r.callData
+      }))
+    ]
+  });
+  const raw = client.callContract(runtime2, {
     call: encodeCallMsg({
       from: zeroAddress,
-      to,
-      data
+      to: MULTICALL3_ADDRESS,
+      data: callData
     }),
     blockNumber: LAST_FINALIZED_BLOCK_NUMBER
   }).result().data;
-}
-var clientCache = {};
-function getClient(chainName, isTestnet) {
-  if (!clientCache[chainName]) {
-    const network248 = getNetwork({
-      chainFamily: "evm",
-      chainSelectorName: chainName,
-      isTestnet
-    });
-    clientCache[chainName] = new ClientCapability(network248.chainSelector.selector);
-  }
-  return clientCache[chainName];
+  const decoded = decodeFunctionResult({
+    abi: MULTICALL3_ABI,
+    functionName: "aggregate3",
+    data: bytesToHex(raw)
+  });
+  return decoded.map((r) => ({
+    success: r.success,
+    returnData: r.returnData
+  }));
 }
 function readAave(runtime2, client, protocol) {
   const reserveCall = encodeFunctionData({
@@ -16847,22 +16891,31 @@ function readAave(runtime2, client, protocol) {
   });
   const aToken = reserveData.aTokenAddress;
   const debtToken = reserveData.variableDebtTokenAddress;
-  const supplyCall = encodeFunctionData({ abi: ERC20, functionName: "totalSupply", args: [] });
-  const balanceCall = encodeFunctionData({ abi: ERC20, functionName: "balanceOf", args: [aToken] });
+  const supplyCallData = encodeFunctionData({ abi: ERC20, functionName: "totalSupply", args: [] });
+  const balanceCallData = encodeFunctionData({
+    abi: ERC20,
+    functionName: "balanceOf",
+    args: [aToken]
+  });
+  const results = multicall(client, runtime2, [
+    { target: aToken, callData: supplyCallData },
+    { target: protocol.assetAddress, callData: balanceCallData },
+    { target: debtToken, callData: supplyCallData }
+  ]);
   const deposits = decodeFunctionResult({
     abi: ERC20,
     functionName: "totalSupply",
-    data: bytesToHex(evmCall(client, runtime2, aToken, supplyCall))
+    data: results[0].returnData
   });
   const liquidity = decodeFunctionResult({
     abi: ERC20,
     functionName: "balanceOf",
-    data: bytesToHex(evmCall(client, runtime2, protocol.assetAddress, balanceCall))
+    data: results[1].returnData
   });
   const borrows = decodeFunctionResult({
     abi: ERC20,
     functionName: "totalSupply",
-    data: bytesToHex(evmCall(client, runtime2, debtToken, supplyCall))
+    data: results[2].returnData
   });
   const d = BigInt(10 ** protocol.decimals);
   const claimedUSD = deposits / d;
@@ -16880,53 +16933,26 @@ function readAave(runtime2, client, protocol) {
     details: `Deposits=$${claimedUSD} | Liq=$${liquidity / d} | Borrows=$${borrows / d} | Util=${(utilizationBps / 100).toFixed(1)}%`
   };
 }
-function readCompound(runtime2, client, protocol) {
-  const supplyCall = encodeFunctionData({ abi: CompoundComet, functionName: "totalSupply", args: [] });
-  const borrowCall = encodeFunctionData({ abi: CompoundComet, functionName: "totalBorrow", args: [] });
-  const balanceCall = encodeFunctionData({ abi: ERC20, functionName: "balanceOf", args: [protocol.poolAddress] });
-  const totalSupply = decodeFunctionResult({
-    abi: CompoundComet,
-    functionName: "totalSupply",
-    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, supplyCall))
-  });
-  const totalBorrow = decodeFunctionResult({
-    abi: CompoundComet,
-    functionName: "totalBorrow",
-    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, borrowCall))
-  });
-  const balance = decodeFunctionResult({
-    abi: ERC20,
-    functionName: "balanceOf",
-    data: bytesToHex(evmCall(client, runtime2, protocol.assetAddress, balanceCall))
-  });
-  const d = BigInt(10 ** protocol.decimals);
-  const claimedUSD = totalSupply / d;
-  const actualUSD = (balance + totalBorrow) / d;
-  const ratio = Number(claimedUSD) > 0 ? Number(actualUSD) * 1e4 / Number(claimedUSD) : 1e4;
-  const utilizationBps = Number(claimedUSD) > 0 ? Math.floor(Number(totalBorrow / d) * 1e4 / Number(claimedUSD)) : 0;
-  return {
-    name: protocol.name,
-    type: "compound",
-    chain: protocol.chainName,
-    claimed: claimedUSD,
-    actual: actualUSD,
-    solvencyRatio: ratio,
-    utilizationBps,
-    details: `Supply=$${claimedUSD} | Liq=$${balance / d} | Borrows=$${totalBorrow / d} | Util=${(utilizationBps / 100).toFixed(1)}%`
-  };
-}
 function readLido(runtime2, client, protocol) {
-  const pooledCall = encodeFunctionData({ abi: LidoStETH, functionName: "getTotalPooledEther", args: [] });
-  const supplyCall = encodeFunctionData({ abi: LidoStETH, functionName: "totalSupply", args: [] });
+  const results = multicall(client, runtime2, [
+    {
+      target: protocol.poolAddress,
+      callData: encodeFunctionData({ abi: LidoStETH, functionName: "getTotalPooledEther", args: [] })
+    },
+    {
+      target: protocol.poolAddress,
+      callData: encodeFunctionData({ abi: LidoStETH, functionName: "totalSupply", args: [] })
+    }
+  ]);
   const pooledEther = decodeFunctionResult({
     abi: LidoStETH,
     functionName: "getTotalPooledEther",
-    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, pooledCall))
+    data: results[0].returnData
   });
   const totalStETH = decodeFunctionResult({
     abi: LidoStETH,
     functionName: "totalSupply",
-    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, supplyCall))
+    data: results[1].returnData
   });
   const d = BigInt(10 ** protocol.decimals);
   const claimedETH = totalStETH / d;
@@ -16944,18 +16970,76 @@ function readLido(runtime2, client, protocol) {
     details: `stETH=${claimedETH} ETH | Pooled=${actualETH} ETH | Backing=${(ratio / 100).toFixed(2)}%`
   };
 }
+function readCompound(runtime2, client, protocol) {
+  const results = multicall(client, runtime2, [
+    {
+      target: protocol.poolAddress,
+      callData: encodeFunctionData({ abi: CompoundComet, functionName: "totalSupply", args: [] })
+    },
+    {
+      target: protocol.poolAddress,
+      callData: encodeFunctionData({ abi: CompoundComet, functionName: "totalBorrow", args: [] })
+    },
+    {
+      target: protocol.assetAddress,
+      callData: encodeFunctionData({
+        abi: ERC20,
+        functionName: "balanceOf",
+        args: [protocol.poolAddress]
+      })
+    }
+  ]);
+  const totalSupply = decodeFunctionResult({
+    abi: CompoundComet,
+    functionName: "totalSupply",
+    data: results[0].returnData
+  });
+  const totalBorrow = decodeFunctionResult({
+    abi: CompoundComet,
+    functionName: "totalBorrow",
+    data: results[1].returnData
+  });
+  const balance = decodeFunctionResult({
+    abi: ERC20,
+    functionName: "balanceOf",
+    data: results[2].returnData
+  });
+  const d = BigInt(10 ** protocol.decimals);
+  const claimedUSD = totalSupply / d;
+  const actualUSD = (balance + totalBorrow) / d;
+  const ratio = Number(claimedUSD) > 0 ? Number(actualUSD) * 1e4 / Number(claimedUSD) : 1e4;
+  const utilizationBps = Number(claimedUSD) > 0 ? Math.floor(Number(totalBorrow / d) * 1e4 / Number(claimedUSD)) : 0;
+  return {
+    name: protocol.name,
+    type: "compound",
+    chain: protocol.chainName,
+    claimed: claimedUSD,
+    actual: actualUSD,
+    solvencyRatio: ratio,
+    utilizationBps,
+    details: `Supply=$${claimedUSD} | Liq=$${balance / d} | Borrows=$${totalBorrow / d} | Util=${(utilizationBps / 100).toFixed(1)}%`
+  };
+}
 function readERC4626(runtime2, client, protocol) {
-  const assetsCall = encodeFunctionData({ abi: ERC4626, functionName: "totalAssets", args: [] });
-  const supplyCall = encodeFunctionData({ abi: ERC4626, functionName: "totalSupply", args: [] });
+  const results = multicall(client, runtime2, [
+    {
+      target: protocol.poolAddress,
+      callData: encodeFunctionData({ abi: ERC4626, functionName: "totalAssets", args: [] })
+    },
+    {
+      target: protocol.poolAddress,
+      callData: encodeFunctionData({ abi: ERC4626, functionName: "totalSupply", args: [] })
+    }
+  ]);
   const totalAssets = decodeFunctionResult({
     abi: ERC4626,
     functionName: "totalAssets",
-    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, assetsCall))
+    data: results[0].returnData
   });
   const totalShares = decodeFunctionResult({
     abi: ERC4626,
     functionName: "totalSupply",
-    data: bytesToHex(evmCall(client, runtime2, protocol.poolAddress, supplyCall))
+    data: results[1].returnData
   });
   const d = BigInt(10 ** protocol.decimals);
   const claimedUSD = totalShares / d;
@@ -16986,14 +17070,71 @@ function readProtocol(runtime2, client, protocol) {
       throw new Error(`Unknown protocol type: ${protocol.type}`);
   }
 }
-function calculateVelocities(results, previousUtils, isFirstRun) {
+var FALLBACK_THRESHOLDS = {
+  solvencyWarningBps: 9500,
+  solvencyCriticalBps: 9000,
+  solvencyEmergencyBps: 8000,
+  velocityAlertBps: 500,
+  velocityExtremeMultiplier: 3,
+  riskWarningThreshold: 30,
+  riskCriticalThreshold: 60,
+  contagionMinChains: 2,
+  contagionVelocityBps: 300,
+  crossRefShareMin: 0.5,
+  crossRefShareMax: 200,
+  lidoMinBackingBps: 9900
+};
+function loadPolicy(runtime2) {
+  let rawConfig = "";
+  let fromSecret = false;
+  try {
+    const secrets = runtime2.getSecrets?.();
+    const fromGetSecrets = secrets?.SENTINAL_POLICY_CONFIG;
+    if (fromGetSecrets && String(fromGetSecrets).trim().length > 0) {
+      rawConfig = String(fromGetSecrets).trim();
+      fromSecret = true;
+    }
+  } catch {}
+  if (!fromSecret) {
+    try {
+      const secret = runtime2.getSecret?.("SENTINAL_POLICY_CONFIG");
+      if (secret && String(secret).trim().length > 0) {
+        rawConfig = String(secret).trim();
+        fromSecret = true;
+      }
+    } catch {}
+  }
+  let policy;
+  if (fromSecret) {
+    try {
+      const parsed = JSON.parse(rawConfig);
+      if (!parsed.thresholds || !parsed.version) {
+        throw new Error("Invalid policy format");
+      }
+      policy = {
+        version: parsed.version,
+        thresholds: { ...FALLBACK_THRESHOLDS, ...parsed.thresholds }
+      };
+    } catch {
+      fromSecret = false;
+      rawConfig = JSON.stringify({ version: "fallback-v1", thresholds: FALLBACK_THRESHOLDS });
+      policy = { version: "fallback-v1", thresholds: FALLBACK_THRESHOLDS };
+    }
+  } else {
+    rawConfig = JSON.stringify({ version: "fallback-v1", thresholds: FALLBACK_THRESHOLDS });
+    policy = { version: "fallback-v1", thresholds: FALLBACK_THRESHOLDS };
+  }
+  const policyHash = keccak256(toBytes(rawConfig));
+  return { policy, policyHash, rawConfig, fromSecret };
+}
+function calculateVelocities(results, previousUtils, isFirstRun, thresholds) {
   return results.map((result, i2) => {
     const currentBps = result.utilizationBps;
     const prevBps = Number(previousUtils[i2]);
     const delta = currentBps - prevBps;
     const velocityBps = isFirstRun ? 0 : Math.abs(delta);
     const velocityNegative = delta < 0;
-    const isAlert = !isFirstRun && velocityBps >= VELOCITY_ALERT_THRESHOLD;
+    const isAlert = !isFirstRun && velocityBps >= thresholds.velocityAlertBps;
     return {
       name: result.name,
       currentUtilBps: currentBps,
@@ -17004,20 +17145,127 @@ function calculateVelocities(results, previousUtils, isFirstRun) {
     };
   });
 }
-function createTVLFetcher(slug) {
-  return (nodeRuntime) => {
-    const httpClient = new ClientCapability2;
-    const response = httpClient.sendRequest(nodeRuntime, {
-      url: `https://api.llama.fi/tvl/${slug}`,
-      method: "GET",
-      headers: { Accept: "application/json" }
-    }).result();
-    const bodyStr = decodeBody(response.body);
-    const tvl = parseFloat(bodyStr.trim());
-    if (isNaN(tvl) || tvl <= 0)
-      return 0n;
-    return BigInt(Math.floor(tvl));
+function detectContagion(results, velocities, isFirstRun, thresholds) {
+  if (isFirstRun) {
+    return {
+      detected: false,
+      affectedChains: [],
+      affectedProtocols: [],
+      correlatedVelocity: 0,
+      tierEscalation: 0,
+      description: "First run — no baseline for contagion detection"
+    };
+  }
+  const velocityAlerts = velocities.filter((v) => v.velocityBps >= thresholds.contagionVelocityBps && !v.velocityNegative);
+  const alertChains = [...new Set(velocityAlerts.map((v) => {
+    const protocol = results.find((r) => r.name === v.name);
+    return protocol?.chain ?? "";
+  }).filter(Boolean))];
+  const solvencyAlerts = results.filter((r) => r.solvencyRatio < thresholds.solvencyWarningBps);
+  const solvencyChains = [...new Set(solvencyAlerts.map((r) => r.chain))];
+  const allAffectedChains = [...new Set([...alertChains, ...solvencyChains])];
+  const allAffectedProtocols = [
+    ...velocityAlerts.map((v) => v.name),
+    ...solvencyAlerts.map((r) => r.name)
+  ].filter((v, i2, a) => a.indexOf(v) === i2);
+  const contagionDetected = allAffectedChains.length >= thresholds.contagionMinChains;
+  if (!contagionDetected) {
+    return {
+      detected: false,
+      affectedChains: [],
+      affectedProtocols: [],
+      correlatedVelocity: 0,
+      tierEscalation: 0,
+      description: "No cross-chain contagion detected"
+    };
+  }
+  const avgVelocity = velocityAlerts.length > 0 ? velocityAlerts.reduce((sum, v) => sum + v.velocityBps, 0) / velocityAlerts.length : 0;
+  const tierEscalation = allAffectedChains.length >= 3 ? 25 : 15;
+  const description = `Contagion detected across ${allAffectedChains.length} chains: ${allAffectedChains.join(", ")} — ${allAffectedProtocols.join(", ")}`;
+  return {
+    detected: true,
+    affectedChains: allAffectedChains,
+    affectedProtocols: allAffectedProtocols,
+    correlatedVelocity: Math.round(avgVelocity),
+    tierEscalation,
+    description
   };
+}
+function calculateRiskScore(results, velocities, contagion, crossRefRisk, isFirstRun, thresholds) {
+  let riskScore = 0;
+  let worstSolvency = Infinity;
+  let worstProtocol = results.length > 0 ? results[0].name : "";
+  for (const result of results) {
+    if (result.solvencyRatio < worstSolvency) {
+      worstSolvency = result.solvencyRatio;
+      worstProtocol = result.name;
+    }
+    if (result.solvencyRatio < thresholds.solvencyWarningBps)
+      riskScore += 15;
+    if (result.solvencyRatio < thresholds.solvencyCriticalBps)
+      riskScore += 10;
+    if (result.solvencyRatio < thresholds.solvencyEmergencyBps)
+      riskScore += 10;
+  }
+  if (!isFirstRun) {
+    for (const v of velocities) {
+      if (v.velocityBps >= thresholds.velocityAlertBps && !v.velocityNegative) {
+        riskScore += 15;
+        if (v.velocityBps >= thresholds.velocityAlertBps * thresholds.velocityExtremeMultiplier) {
+          riskScore += 20;
+        }
+      } else if (v.velocityBps >= thresholds.velocityAlertBps && v.velocityNegative) {
+        riskScore += 10;
+      }
+    }
+  }
+  if (contagion.detected) {
+    riskScore += contagion.tierEscalation;
+  }
+  riskScore += crossRefRisk;
+  if (riskScore > 100)
+    riskScore = 100;
+  const anomalyDetected = crossRefRisk > 0 || worstSolvency < thresholds.solvencyWarningBps || !isFirstRun && velocities.some((v) => v.isAlert) || contagion.detected;
+  let severity;
+  let statusText;
+  if (riskScore < thresholds.riskWarningThreshold && worstSolvency >= thresholds.solvencyWarningBps) {
+    severity = 0;
+    statusText = "HEALTHY";
+  } else if (riskScore < thresholds.riskCriticalThreshold && worstSolvency >= thresholds.solvencyCriticalBps) {
+    severity = 1;
+    statusText = "WARNING";
+  } else {
+    severity = 2;
+    statusText = "CRITICAL";
+  }
+  return { riskScore, worstSolvency, worstProtocol, severity, statusText, anomalyDetected };
+}
+function calculateCrossRefRisk(results, tvlMap, thresholds, runtime2) {
+  let crossRefRisk = 0;
+  for (const result of results) {
+    const offchainTVL = tvlMap[result.name] ?? 0n;
+    if (!offchainTVL || Number(offchainTVL) <= 0 || Number(result.claimed) <= 0)
+      continue;
+    if (result.type === "lido") {
+      runtime2.log(`   ${result.name}: Solvency=${(result.solvencyRatio / 100).toFixed(2)}% | TVL=$${offchainTVL}`);
+      if (result.solvencyRatio < thresholds.lidoMinBackingBps) {
+        crossRefRisk += 20;
+        runtime2.log(`   ⚠️  Lido backing below ${(thresholds.lidoMinBackingBps / 100).toFixed(0)}%`);
+      } else {
+        runtime2.log(`   ✅ Lido backing healthy`);
+      }
+      continue;
+    }
+    const share = Number(result.claimed) / Number(offchainTVL) * 100;
+    runtime2.log(`   ${result.name}: Onchain=$${result.claimed} | TVL=$${offchainTVL} | Share=${share.toFixed(1)}%`);
+    if (share < thresholds.crossRefShareMin || share > thresholds.crossRefShareMax) {
+      crossRefRisk += 15;
+      runtime2.log(`   ⚠️  Unusual ratio`);
+    } else {
+      runtime2.log(`   ✅ Within range`);
+    }
+  }
+  return crossRefRisk;
 }
 var B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 function toBase64(str) {
@@ -17035,12 +17283,22 @@ function toBase64(str) {
   }
   return result;
 }
+function decodeBody(body) {
+  if (typeof body === "string")
+    return body;
+  const bytes = new Uint8Array(body);
+  let str = "";
+  for (let i2 = 0;i2 < bytes.length; i2++) {
+    str += String.fromCharCode(bytes[i2]);
+  }
+  return str;
+}
 function createDiscordAlerter(webhookUrl, data) {
   return (nodeRuntime) => {
     if (!webhookUrl)
       return 0n;
     const httpClient = new ClientCapability2;
-    const color = data.riskScore > 0 ? 15158332 : 3066993;
+    const color = data.riskScore > 59 ? 15158332 : data.riskScore > 29 ? 16776960 : 3066993;
     let velocityFieldValue;
     if (data.isFirstRun) {
       velocityFieldValue = "ℹ️ Baseline seeded — velocity active from next check";
@@ -17050,6 +17308,10 @@ function createDiscordAlerter(webhookUrl, data) {
     } else {
       velocityFieldValue = "✅ No velocity spikes";
     }
+    const contagionFieldValue = data.contagion.detected ? `\uD83D\uDD34 ${data.contagion.description}
++${data.contagion.tierEscalation} risk escalation` : "✅ No cross-chain contagion";
+    const policyFieldValue = `v${data.policyVersion}
+\`${data.policyHash.slice(0, 18)}...\``;
     const payload = JSON.stringify({
       username: "SENTINAL Guardian",
       embeds: [{
@@ -17058,13 +17320,15 @@ function createDiscordAlerter(webhookUrl, data) {
         fields: [
           { name: "Status", value: data.severity, inline: true },
           { name: "Risk Score", value: `${data.riskScore}/100`, inline: true },
-          { name: "Coverage", value: `${data.protocols} Protocols on ${data.chains} Chains`, inline: false },
+          { name: "Policy", value: policyFieldValue, inline: true },
+          { name: "Coverage", value: `${data.protocols} Protocols | ${data.chains} Chains`, inline: false },
           { name: "Aggregate Reserves", value: `$${data.totalActualUSD}`, inline: true },
           { name: "Worst Solvency", value: `${data.worstSolvency}% (${data.worstProtocol})`, inline: true },
           { name: "⚡ Velocity", value: velocityFieldValue, inline: false },
+          { name: "\uD83D\uDD17 Contagion", value: contagionFieldValue, inline: false },
           { name: "Transaction", value: `[View on Etherscan](https://sepolia.etherscan.io/tx/${data.txHash})`, inline: false }
         ],
-        footer: { text: "Powered by Chainlink CRE | SENTINAL" }
+        footer: { text: "Powered by Chainlink CRE | SENTINAL — Confidential Policy Enforcement" }
       }]
     });
     try {
@@ -17080,22 +17344,104 @@ function createDiscordAlerter(webhookUrl, data) {
     }
   };
 }
-function healthCheckWorkflow(runtime2, payload) {
+var RESERVE_ORACLE_ABI = [
+  {
+    inputs: [{ name: "names", type: "string[]" }],
+    name: "getPreviousUtilizations",
+    outputs: [{ name: "utils", type: "uint256[]" }],
+    stateMutability: "view",
+    type: "function"
+  }
+];
+function createTVLFetcher(slug) {
+  return (nodeRuntime) => {
+    const httpClient = new ClientCapability2;
+    const response = httpClient.sendRequest(nodeRuntime, {
+      url: `https://api.llama.fi/tvl/${slug}`,
+      method: "GET",
+      headers: { Accept: "application/json" }
+    }).result();
+    const bodyStr = decodeBody(response.body);
+    const tvl = parseFloat(bodyStr.trim());
+    if (isNaN(tvl) || tvl <= 0)
+      return 0n;
+    return BigInt(Math.floor(tvl));
+  };
+}
+function toBase642(str) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  let result = "";
+  let i2 = 0;
+  const bytes = [];
+  for (let c = 0;c < str.length; c++) {
+    const code2 = str.charCodeAt(c);
+    if (code2 < 128) {
+      bytes.push(code2);
+    } else if (code2 < 2048) {
+      bytes.push(code2 >> 6 | 192, code2 & 63 | 128);
+    } else {
+      bytes.push(code2 >> 12 | 224, code2 >> 6 & 63 | 128, code2 & 63 | 128);
+    }
+  }
+  while (i2 < bytes.length) {
+    const b0 = bytes[i2++], b1 = bytes[i2++], b2 = bytes[i2++];
+    result += chars[b0 >> 2];
+    result += chars[(b0 & 3) << 4 | b1 >> 4];
+    result += b1 !== undefined ? chars[(b1 & 15) << 2 | b2 >> 6] : "=";
+    result += b2 !== undefined ? chars[b2 & 63] : "=";
+  }
+  return result;
+}
+function createPrevUtilsFetcher(oracleAddress, callData) {
+  return (nodeRuntime) => {
+    const httpClient = new ClientCapability2;
+    const bodyStr = JSON.stringify({
+      jsonrpc: "2.0",
+      method: "eth_call",
+      params: [{ to: oracleAddress, data: callData }, "latest"],
+      id: 1
+    });
+    const response = httpClient.sendRequest(nodeRuntime, {
+      url: "https://ethereum-sepolia-rpc.publicnode.com",
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: toBase642(bodyStr)
+    }).result();
+    const bodyRes = decodeBody(response.body);
+    const json = JSON.parse(bodyRes);
+    if (!json.result || json.result === "0x")
+      return [];
+    const decoded = decodeFunctionResult({
+      abi: RESERVE_ORACLE_ABI,
+      functionName: "getPreviousUtilizations",
+      data: json.result
+    });
+    return [...decoded];
+  };
+}
+function healthCheckWorkflow(runtime2, _payload) {
   const config = runtime2.config;
   const chainSet = [];
   for (const p of config.protocols) {
     if (chainSet.indexOf(p.chainName) === -1)
       chainSet.push(p.chainName);
   }
-  runtime2.log("\uD83D\uDE80 SENTINAL Multi-Chain Multi-Protocol HealthCheck");
-  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  runtime2.log("\uD83D\uDE80 SENTINAL Multi-Chain DeFi Risk Monitoring");
+  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   runtime2.log("\uD83D\uDCCB Capabilities: Cron | EVM Read | HTTP | Consensus | EVM Write | DON Time");
   runtime2.log(`\uD83D\uDCCA Monitoring ${config.protocols.length} protocols across ${chainSet.length} chains`);
-  runtime2.log(`⚡ Velocity Detection: ENABLED (threshold: ${VELOCITY_ALERT_THRESHOLD / 100}% per cycle)`);
   runtime2.log(`\uD83D\uDD17 Chains: ${chainSet.join(", ")}`);
-  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE1 STEP 1: Onchain Data [EVM Read — Multi-Chain] (Calls 1-14)");
+  runtime2.log("\uD83D\uDD10 STEP 1: Load Confidential Policy [runtime.getSecret()]");
+  const { policy, policyHash, fromSecret } = loadPolicy(runtime2);
+  const thresholds = policy.thresholds;
+  runtime2.log(`   ${fromSecret ? "\uD83D\uDD12 Policy loaded from CRE secret store" : "⚠️  Using fallback policy (configure SENTINAL_POLICY_CONFIG secret)"}`);
+  runtime2.log(`   \uD83D\uDCCB Policy version: ${policy.version}`);
+  runtime2.log(`   \uD83D\uDD11 Policy hash: ${policyHash.slice(0, 18)}...`);
+  runtime2.log(`   \uD83C\uDFAF Velocity threshold: ${(thresholds.velocityAlertBps / 100).toFixed(1)}%/cycle`);
+  runtime2.log(`   \uD83C\uDFAF Solvency warning: ${(thresholds.solvencyWarningBps / 100).toFixed(0)}%`);
+  runtime2.log("");
+  runtime2.log("\uD83D\uDCE1 STEP 2: Onchain Data [EVM Read — Multicall3 Batched] (Calls 1-7)");
   const results = [];
   for (const protocol of config.protocols) {
     runtime2.log(`   ┌─ ${protocol.name} [${protocol.chainName}]`);
@@ -17106,167 +17452,105 @@ function healthCheckWorkflow(runtime2, payload) {
     runtime2.log(`   └─ Solvency: ${(result.solvencyRatio / 100).toFixed(2)}% | Util: ${(result.utilizationBps / 100).toFixed(1)}%`);
     runtime2.log("");
   }
-  runtime2.log("\uD83C\uDF10 STEP 2: Offchain Data [HTTP + DON Consensus]");
+  runtime2.log("\uD83C\uDF10 STEP 3: Offchain TVL [HTTP + DON Consensus]");
   const slugs = [];
   for (const p of config.protocols) {
     if (slugs.indexOf(p.defiLlamaSlug) === -1)
       slugs.push(p.defiLlamaSlug);
   }
   slugs.sort();
-  const tvlMap = {};
+  const tvlBySlug = {};
   for (const slug of slugs) {
     const fetcher = createTVLFetcher(slug);
     const tvl = runtime2.runInNodeMode(fetcher, consensusMedianAggregation())().result();
-    tvlMap[slug] = tvl;
+    tvlBySlug[slug] = tvl;
     runtime2.log(`   ✅ ${slug}: $${tvl.toString()}`);
   }
+  const tvlMap = {};
+  for (const protocol of config.protocols) {
+    tvlMap[protocol.name] = tvlBySlug[protocol.defiLlamaSlug] ?? 0n;
+  }
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE1 STEP 3: Read Previous Utilizations [Call 15 — Sepolia]");
+  runtime2.log("\uD83D\uDCE1 STEP 4: Previous Utilizations [Call 8 — Sepolia eth_call]");
   const sepoliaClient = getClient(config.chainSelector, true);
   const checkNumber = Math.floor(runtime2.now() / 1000) % 1e5;
   const protocolNames = config.protocols.map((p) => p.name);
   let previousUtils = config.protocols.map(() => 0n);
   let isFirstRun = true;
   try {
-    const prevUtilCall = encodeFunctionData({
+    const prevUtilCallData = encodeFunctionData({
       abi: RESERVE_ORACLE_ABI,
       functionName: "getPreviousUtilizations",
       args: [protocolNames]
     });
-    const prevUtilResult = evmCall(sepoliaClient, runtime2, config.oracleAddress, prevUtilCall);
-    const decoded = decodeFunctionResult({
-      abi: RESERVE_ORACLE_ABI,
-      functionName: "getPreviousUtilizations",
-      data: bytesToHex(prevUtilResult)
-    });
-    if (decoded.length === protocolNames.length) {
-      previousUtils = decoded;
-      isFirstRun = decoded.every((v) => v === 0n);
+    const fetcher = createPrevUtilsFetcher(config.oracleAddress, prevUtilCallData);
+    const utils2 = runtime2.runInNodeMode(fetcher, consensusMedianAggregation())().result();
+    if (utils2.length === protocolNames.length) {
+      previousUtils = utils2;
+      isFirstRun = utils2.every((v) => v === 0n);
       if (isFirstRun) {
-        runtime2.log("   ℹ️  First run — seeding baseline, velocity scoring suppressed");
+        runtime2.log("   ℹ️  First run — seeding baseline");
       } else {
-        runtime2.log(`   ✅ Previous utilizations loaded (${decoded.length} protocols)`);
-        for (let i2 = 0;i2 < decoded.length; i2++) {
-          runtime2.log(`      ${protocolNames[i2]}: ${(Number(decoded[i2]) / 100).toFixed(1)}%`);
+        runtime2.log(`   ✅ Previous utilizations loaded (${utils2.length} protocols)`);
+        for (let i2 = 0;i2 < protocolNames.length; i2++) {
+          runtime2.log(`   \uD83D\uDCCA ${protocolNames[i2]}: prev=${(Number(utils2[i2]) / 100).toFixed(1)}%`);
         }
       }
+    } else if (utils2.length === 0) {
+      runtime2.log("   ℹ️  No previous data — seeding baseline");
+    } else {
+      runtime2.log(`   ⚠️  Length mismatch (got ${utils2.length}, expected ${protocolNames.length}) — treating as first run`);
     }
   } catch (e) {
     runtime2.log(`   ⚠️  Could not read previous utilizations — treating as first run`);
-    runtime2.log(`      Error: ${e?.message || String(e)}`);
+    runtime2.log(`   ⚠️  Error: ${e?.message ?? String(e)}`);
     isFirstRun = true;
   }
   runtime2.log("");
-  runtime2.log(`⚡ STEP 4: Velocity Detection${isFirstRun ? " [BASELINE RUN — no scoring]" : ""}`);
-  const velocities = calculateVelocities(results, previousUtils, isFirstRun);
+  runtime2.log(`⚡ STEP 5: Velocity Detection${isFirstRun ? " [BASELINE]" : ""}`);
+  const velocities = calculateVelocities(results, previousUtils, isFirstRun, thresholds);
   const velocityAlerts = velocities.filter((v) => v.isAlert);
   for (const v of velocities) {
     if (isFirstRun) {
-      runtime2.log(`   \uD83D\uDCCC ${v.name}: Util=${(v.currentUtilBps / 100).toFixed(1)}% (baseline stored)`);
+      runtime2.log(`   \uD83D\uDCCC ${v.name}: Util=${(v.currentUtilBps / 100).toFixed(1)}% (baseline)`);
     } else {
-      const direction = v.velocityNegative ? "▼" : "▲";
+      const dir = v.velocityNegative ? "▼" : "▲";
       const tag = v.isAlert ? "⚡ ALERT" : "✅";
-      runtime2.log(`   ${tag} ${v.name}:`);
-      runtime2.log(`      Util: ${(v.prevUtilBps / 100).toFixed(1)}% → ${(v.currentUtilBps / 100).toFixed(1)}% ${direction}`);
-      runtime2.log(`      Velocity: ${(v.velocityBps / 100).toFixed(1)}%/cycle`);
-    }
-  }
-  if (!isFirstRun) {
-    if (velocityAlerts.length > 0) {
-      runtime2.log(`   \uD83D\uDEA8 ${velocityAlerts.length} velocity alert(s) detected!`);
-    } else {
-      runtime2.log("   ✅ All utilization rates stable");
+      runtime2.log(`   ${tag} ${v.name}: ${(v.prevUtilBps / 100).toFixed(1)}% → ${(v.currentUtilBps / 100).toFixed(1)}% ${dir} (${(v.velocityBps / 100).toFixed(1)}%/cycle)`);
     }
   }
   runtime2.log("");
-  runtime2.log("\uD83D\uDD0D STEP 5: Cross-Reference Analysis");
-  let crossRefRisk = 0;
-  for (const result of results) {
-    const protocol = config.protocols.filter((p) => p.name === result.name)[0];
-    const offchainTVL = tvlMap[protocol.defiLlamaSlug];
-    if (offchainTVL && Number(offchainTVL) > 0 && Number(result.claimed) > 0) {
-      if (result.type === "lido") {
-        runtime2.log(`   ${result.name}: Solvency=${(result.solvencyRatio / 100).toFixed(2)}% | TVL=$${offchainTVL}`);
-        if (result.solvencyRatio < 9900) {
-          crossRefRisk += 20;
-          runtime2.log(`   ⚠️  Lido backing below 99%`);
-        } else {
-          runtime2.log(`   ✅ Lido backing healthy`);
-        }
-        continue;
-      }
-      const share = Number(result.claimed) / Number(offchainTVL) * 100;
-      runtime2.log(`   ${result.name}: Onchain=$${result.claimed} | TVL=$${offchainTVL} | Share=${share.toFixed(1)}%`);
-      if (share < 0.5 || share > 200) {
-        crossRefRisk += 15;
-        runtime2.log(`   ⚠️  Unusual ratio`);
-      } else {
-        runtime2.log(`   ✅ Within range`);
-      }
-    }
-  }
-  runtime2.log("");
-  runtime2.log("\uD83C\uDFAF STEP 6: Risk Assessment [Solvency + Velocity + CrossRef]");
-  let riskScore = 0;
-  let worstSolvency = 1e4;
-  let worstProtocol = "";
-  for (const result of results) {
-    if (result.solvencyRatio < worstSolvency) {
-      worstSolvency = result.solvencyRatio;
-      worstProtocol = result.name;
-    }
-    if (result.solvencyRatio < 9500)
-      riskScore += 15;
-    if (result.solvencyRatio < 9000)
-      riskScore += 10;
-    if (result.solvencyRatio < 8000)
-      riskScore += 10;
-  }
-  if (!isFirstRun) {
-    for (const v of velocities) {
-      if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD && !v.velocityNegative) {
-        riskScore += 15;
-        runtime2.log(`   ⚡ Velocity risk: ${v.name} +${(v.velocityBps / 100).toFixed(1)}% → +15 risk`);
-        if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD * 3) {
-          riskScore += 20;
-          runtime2.log(`   \uD83D\uDEA8 EXTREME velocity: ${v.name} → +20 additional risk`);
-        }
-      } else if (v.velocityBps >= VELOCITY_ALERT_THRESHOLD && v.velocityNegative) {
-        riskScore += 10;
-        runtime2.log(`   ⚡ Rapid withdrawal: ${v.name} -${(v.velocityBps / 100).toFixed(1)}% → +10 risk`);
-      }
-    }
+  runtime2.log("\uD83D\uDD17 STEP 6: Cross-Chain Contagion Detection");
+  const contagion = detectContagion(results, velocities, isFirstRun, thresholds);
+  if (contagion.detected) {
+    runtime2.log(`   \uD83D\uDEA8 CONTAGION DETECTED: ${contagion.description}`);
+    runtime2.log(`   \uD83D\uDCCA Affected chains: ${contagion.affectedChains.join(", ")}`);
+    runtime2.log(`   \uD83D\uDCCA Correlated velocity: ${(contagion.correlatedVelocity / 100).toFixed(1)}%/cycle`);
+    runtime2.log(`   ⬆️  Tier escalation: +${contagion.tierEscalation} risk`);
   } else {
-    runtime2.log("   ℹ️  Velocity scoring skipped (first run — no baseline)");
+    runtime2.log(`   ✅ ${contagion.description}`);
   }
-  riskScore += crossRefRisk;
-  if (riskScore > 100)
-    riskScore = 100;
-  const anomalyDetected = crossRefRisk > 0 || worstSolvency < 9500 || !isFirstRun && velocityAlerts.length > 0;
-  let severity;
-  let statusText;
-  if (riskScore < 30 && worstSolvency >= 9500) {
-    severity = 0;
-    statusText = "HEALTHY";
-    runtime2.log("   ✅ Status: HEALTHY");
-  } else if (riskScore < 60 && worstSolvency >= 9000) {
-    severity = 1;
-    statusText = "WARNING";
-    runtime2.log("   ⚠️  Status: WARNING");
-  } else {
-    severity = 2;
-    statusText = "CRITICAL";
-    runtime2.log("   \uD83D\uDEA8 Status: CRITICAL");
-  }
-  runtime2.log(`   Risk Score:      ${riskScore}/100`);
-  runtime2.log(`   Worst Protocol:  ${worstProtocol} (${(worstSolvency / 100).toFixed(2)}%)`);
-  runtime2.log(`   Velocity Alerts: ${isFirstRun ? "N/A (first run)" : velocityAlerts.length}`);
-  runtime2.log(`   Anomaly:         ${anomalyDetected ? "YES \uD83D\uDD34" : "NO ✅"}`);
-  runtime2.log(`   Chains:          ${chainSet.length}`);
-  runtime2.log(`   Protocols:       ${results.length}`);
-  runtime2.log(`   First Run:       ${isFirstRun}`);
   runtime2.log("");
-  runtime2.log("\uD83D\uDCE4 STEP 7: Submit Report [EVM Write + DON Time]");
+  runtime2.log("\uD83D\uDD0D STEP 7: Cross-Reference Analysis");
+  const crossRefRisk = calculateCrossRefRisk(results, tvlMap, thresholds, runtime2);
+  runtime2.log("");
+  runtime2.log("\uD83C\uDFAF STEP 8: Risk Assessment [Confidential Policy + Contagion]");
+  const {
+    riskScore,
+    worstSolvency,
+    worstProtocol,
+    severity,
+    statusText,
+    anomalyDetected
+  } = calculateRiskScore(results, velocities, contagion, crossRefRisk, isFirstRun, thresholds);
+  runtime2.log(`   Status:        ${statusText}`);
+  runtime2.log(`   Risk Score:    ${riskScore}/100`);
+  runtime2.log(`   Worst:         ${worstProtocol} (${(worstSolvency / 100).toFixed(2)}%)`);
+  runtime2.log(`   Contagion:     ${contagion.detected ? "\uD83D\uDD34 YES" : "✅ NO"}`);
+  runtime2.log(`   Policy:        ${policy.version} | ${policyHash.slice(0, 18)}...`);
+  runtime2.log(`   Anomaly:       ${anomalyDetected ? "YES \uD83D\uDD34" : "NO ✅"}`);
+  runtime2.log("");
+  runtime2.log("\uD83D\uDCE4 STEP 9: Submit Attested Report [EVM Write + policyHash] (Call 9)");
   const nowSeconds = BigInt(Math.floor(runtime2.now() / 1000));
   let totalClaimedUSD = 0n;
   let totalActualUSD = 0n;
@@ -17276,7 +17560,8 @@ function healthCheckWorkflow(runtime2, payload) {
       totalActualUSD += r.actual;
     }
   }
-  const reportData = encodeAbiParameters(parseAbiParameters("uint256 totalReservesUSD, uint256 totalClaimedUSD, uint256 globalRatio, uint256 riskScore, uint256 timestamp, uint256 checkNumber, uint8 severity, bool anomalyDetected"), [
+  const policyHashBytes32 = policyHash;
+  const reportData = encodeAbiParameters(parseAbiParameters("uint256 totalReservesUSD, uint256 totalClaimedUSD, uint256 globalRatio, uint256 riskScore, uint256 timestamp, uint256 checkNumber, uint8 severity, bool anomalyDetected, bytes32 policyHash"), [
     totalActualUSD,
     totalClaimedUSD,
     BigInt(Math.floor(worstSolvency)),
@@ -17284,9 +17569,10 @@ function healthCheckWorkflow(runtime2, payload) {
     nowSeconds,
     BigInt(checkNumber),
     severity,
-    anomalyDetected
+    anomalyDetected,
+    policyHashBytes32
   ]);
-  runtime2.log("   \uD83D\uDCDD Generating DON-signed report...");
+  runtime2.log("   \uD83D\uDCDD Generating DON-signed report with policyHash...");
   const reportResponse = runtime2.report({
     encodedPayload: hexToBase64(reportData),
     encoderName: "evm",
@@ -17300,9 +17586,11 @@ function healthCheckWorkflow(runtime2, payload) {
     gasConfig: { gasLimit: "500000" }
   }).result();
   const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
+  runtime2.log(`   ✅ Report submitted: ${txHash}`);
+  runtime2.log(`   \uD83D\uDD11 Policy binding: ${policyHash.slice(0, 18)}...`);
   if (config.discordWebhookUrl) {
     runtime2.log("");
-    runtime2.log("\uD83D\uDD14 STEP 8: Discord Alert [HTTP POST]");
+    runtime2.log("\uD83D\uDD14 STEP 10: Discord Alert [HTTP POST]");
     const alerter = createDiscordAlerter(config.discordWebhookUrl, {
       checkNumber,
       riskScore,
@@ -17314,38 +17602,45 @@ function healthCheckWorkflow(runtime2, payload) {
       worstProtocol,
       txHash,
       isFirstRun,
-      velocityAlerts: velocityAlerts.map((v) => ({
-        name: v.name,
-        velocityBps: v.velocityBps,
-        currentUtilBps: v.currentUtilBps
-      }))
+      velocityAlerts,
+      contagion,
+      policyHash,
+      policyVersion: policy.version
     });
     const alertResult = runtime2.runInNodeMode(alerter, consensusMedianAggregation())().result();
     runtime2.log(alertResult > 0n ? "   ✅ Alert sent to Discord" : "   ❌ Alert failed");
   }
   runtime2.log("");
-  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  runtime2.log("✅ SENTINAL Multi-Chain Health Check Complete!");
-  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  runtime2.log("✅ SENTINAL Health Check Complete!");
+  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   for (const r of results) {
-    const emoji = r.solvencyRatio >= 9500 ? "✅" : r.solvencyRatio >= 9000 ? "⚠️" : "\uD83D\uDEA8";
+    const emoji = r.solvencyRatio >= thresholds.solvencyWarningBps ? "✅" : r.solvencyRatio >= thresholds.solvencyCriticalBps ? "⚠️" : "\uD83D\uDEA8";
     const v = velocities.find((x) => x.name === r.name);
-    const velStr = !isFirstRun && v && v.isAlert ? ` ⚡+${(v.velocityBps / 100).toFixed(1)}%` : "";
-    runtime2.log(`   ${emoji} ${r.name}: ${(r.solvencyRatio / 100).toFixed(2)}%${velStr}`);
+    const velStr = !isFirstRun && v?.isAlert ? ` ⚡+${(v.velocityBps / 100).toFixed(1)}%` : "";
+    const contagionTag = contagion.affectedProtocols.includes(r.name) ? " \uD83D\uDD17CONTAGION" : "";
+    runtime2.log(`   ${emoji} ${r.name}: ${(r.solvencyRatio / 100).toFixed(2)}%${velStr}${contagionTag}`);
   }
-  runtime2.log(`   \uD83D\uDD17 Chains:     ${chainSet.length} (${chainSet.join(", ")})`);
-  runtime2.log(`   \uD83D\uDCCA Protocols:  ${results.length}`);
-  runtime2.log(`   \uD83D\uDCB0 Reserves:   $${totalActualUSD}`);
-  runtime2.log(`   ⚡ Velocity:   ${isFirstRun ? "baseline seeded" : `${velocityAlerts.length} alert(s)`}`);
-  runtime2.log(`   Risk:          ${riskScore}/100 — ${statusText}`);
-  runtime2.log(`   Check #:       ${checkNumber}`);
-  runtime2.log(`   Tx:            ${txHash}`);
-  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  runtime2.log(`   \uD83D\uDD17 Chains:       ${chainSet.length} (${chainSet.join(", ")})`);
+  runtime2.log(`   \uD83D\uDCCA Protocols:    ${results.length}`);
+  runtime2.log(`   \uD83D\uDCB0 Reserves:     $${totalActualUSD}`);
+  runtime2.log(`   ⚡ Velocity:     ${isFirstRun ? "baseline seeded" : `${velocityAlerts.length} alert(s)`}`);
+  runtime2.log(`   \uD83D\uDD17 Contagion:    ${contagion.detected ? `YES — ${contagion.affectedChains.length} chains` : "NO"}`);
+  runtime2.log(`   \uD83D\uDD12 Policy:       ${policy.version} (${fromSecret ? "confidential" : "fallback"})`);
+  runtime2.log(`   \uD83D\uDCCB policyHash:   ${policyHash.slice(0, 18)}...`);
+  runtime2.log(`   Risk:            ${riskScore}/100 — ${statusText}`);
+  runtime2.log(`   Tx:              ${txHash}`);
+  runtime2.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   return {
     success: true,
     checkNumber,
     isFirstRun,
     chains: chainSet,
+    policy: {
+      version: policy.version,
+      hash: policyHash,
+      fromSecret
+    },
     protocols: results.map((r, i2) => ({
       name: r.name,
       type: r.type,
@@ -17355,18 +17650,25 @@ function healthCheckWorkflow(runtime2, payload) {
       velocityBps: isFirstRun ? 0 : velocities[i2].velocityBps,
       velocityNegative: velocities[i2].velocityNegative,
       velocityAlert: isFirstRun ? false : velocities[i2].isAlert,
+      contagionAffected: contagion.affectedProtocols.includes(r.name),
       details: r.details
     })),
-    offchain: Object.keys(tvlMap).map((slug) => ({
-      slug,
-      tvl: tvlMap[slug].toString()
-    })),
+    contagion: {
+      detected: contagion.detected,
+      affectedChains: contagion.affectedChains,
+      tierEscalation: contagion.tierEscalation,
+      description: contagion.description
+    },
     aggregate: {
       totalClaimedUSD: totalClaimedUSD.toString(),
       totalActualUSD: totalActualUSD.toString(),
       worstSolvency: (worstSolvency / 100).toFixed(2),
       worstProtocol
     },
+    offchain: [
+      { slug: "aave-v3", tvl: (tvlBySlug["aave-v3"] ?? 0n).toString() },
+      { slug: "lido", tvl: (tvlBySlug["lido"] ?? 0n).toString() }
+    ],
     velocityAlerts: isFirstRun ? [] : velocityAlerts.map((v) => ({
       name: v.name,
       velocityBps: v.velocityBps,
@@ -17377,6 +17679,7 @@ function healthCheckWorkflow(runtime2, payload) {
     riskScore,
     severity: statusText,
     anomalyDetected,
+    policyHash,
     txHash
   };
 }
