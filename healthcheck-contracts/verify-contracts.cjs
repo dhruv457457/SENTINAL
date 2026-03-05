@@ -2,17 +2,17 @@ const fs = require("fs");
 const path = require("path");
 
 // ─── CONFIG ────────────────────────────────────────────────────────────────
-const ETHERSCAN_API_KEY = "";
+const ETHERSCAN_API_KEY = "11T6E53NN46BTY68AJYBN8GEHHTNVWRPRF";
 const API_URL = "https://api.etherscan.io/v2/api?chainid=11155111";
 const CONTRACTS = [
     {
         name: "ReserveOracleV2",
-        address: "0x71f540d7dac0fc71b6652b1d8aee9012638095ca",
+        address: "0x985eb2859e7502f38d3944a4a6d10aa5d7158b24",  // ← new
         contractPath: "project/contracts/ReserveOracleV2.sol",
     },
     {
         name: "SentinalGuard",
-        address: "0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905",
+        address: "0xfc3082f4954f36ce7794e6c49769b9bf819fc80a",  // ← new
         contractPath: "project/contracts/SentinalGuard.sol",
     },
 ];
@@ -65,7 +65,7 @@ async function pollStatus(guid, contractName) {
     for (let i = 0; i < 20; i++) {
         await new Promise((r) => setTimeout(r, 5000));
 
-        const url = `${API_URL}&module=contract&action=checkverifystatus&guid=${guid}&apikey=${ETHERSCAN_API_KEY}`; const res = await fetch(url);
+const url = `${API_URL}&module=contract&action=checkverifystatus&guid=${guid}&apikey=${ETHERSCAN_API_KEY}`;        const res = await fetch(url);
         const json = await res.json();
 
         console.log(`  [${i + 1}] ${json.result}`);

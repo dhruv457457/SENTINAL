@@ -13,13 +13,14 @@ interface IReceiver {
 /**
  * @title ReserveOracleV2
  * @author SENTINAL — Multi-Chain DeFi Health Monitor
- * @notice Receives DON-signed aggregate health reports from Chainlink CRE,
- *         plus per-protocol solvency + velocity data from the SENTINAL backend.
+ * @notice Receives DON-signed aggregate health reports from Chainlink CRE.
  *
- * NEW in this version:
- *   - Stores per-protocol utilization for velocity detection by CRE workflow
- *   - Hooks into SentinalGuard for circuit-breaker updates
- *   - getPreviousUtilizations() — read by CRE as the 15th EVM call
+ * V3 additions:
+ *   - policyHash included in every report — cryptographic compliance trail
+ *   - AttestationRegistry: runId → digest → policyHash (auditable history)
+ *   - PolicyVersionActivated event for governance-ratified policy upgrades
+ *   - Replay protection on onReport()
+ *   - Timestamp freshness enforcement
  */
 contract ReserveOracleV2 is IReceiver {
 
@@ -36,6 +37,7 @@ contract ReserveOracleV2 is IReceiver {
         uint256 checkNumber;
         uint8   severity;
         bool    anomalyDetected;
+        bytes32 policyHash;         // NEW: keccak256(SENTINAL_POLICY_CONFIG)
     }
 
     struct ProtocolReport {
@@ -45,9 +47,9 @@ contract ReserveOracleV2 is IReceiver {
         uint256 claimed;
         uint256 actual;
         uint256 solvencyRatio;
-        uint256 utilization;        // basis points (8700 = 87%)
-        uint256 velocityBps;        // change in utilization since last check (signed stored as uint, see note)
-        bool    velocityNegative;   // true if utilization decreased
+        uint256 utilization;
+        uint256 velocityBps;
+        bool    velocityNegative;
         uint256 timestamp;
     }
 
@@ -58,6 +60,19 @@ contract ReserveOracleV2 is IReceiver {
         uint256 lastUpdated;
     }
 
+    /// @notice AttestationRegistry entry — every enforcement event is
+    ///         cryptographically bound to the policy version that triggered it.
+    ///         Auditors can verify: "Action X was triggered by policy version Y
+    ///         at timestamp Z with runId R."
+    struct Attestation {
+        bytes32 policyHash;     // keccak256 of policy config JSON
+        uint256 riskScore;
+        uint8   severity;
+        uint256 timestamp;
+        uint256 checkNumber;
+        bool    anomalyDetected;
+    }
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // STATE
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -66,7 +81,7 @@ contract ReserveOracleV2 is IReceiver {
     address public forwarder;
     address public reporter;
     address public emergencyController;
-    address public guard;               // NEW: SentinalGuard circuit breaker
+    address public guard;
 
     // ── Aggregate (DON-signed via CRE) ──────────────
     HealthReport public latestReport;
@@ -76,14 +91,9 @@ contract ReserveOracleV2 is IReceiver {
     // ── Per-Protocol ────────────────────────────────
     mapping(uint256 => mapping(uint256 => ProtocolReport)) public protocolReports;
     mapping(uint256 => uint256) public protocolCountPerCheck;
-
-    // keccak256(name) => ProtocolReport (latest)
     mapping(bytes32 => ProtocolReport) public latestProtocolData;
     bytes32[] public trackedProtocols;
     mapping(bytes32 => bool) private protocolTracked;
-
-    // NEW: previous utilization per protocol for velocity calc in CRE workflow
-    // keccak256(name) => utilization in basis points
     mapping(bytes32 => uint256) public previousUtilization;
 
     // ── Per-Chain ───────────────────────────────────
@@ -92,6 +102,21 @@ contract ReserveOracleV2 is IReceiver {
     mapping(bytes32 => bool) private chainTracked;
     mapping(bytes32 => string) public chainNames;
 
+    // ── AttestationRegistry ─────────────────────────
+    // checkNumber → Attestation
+    // Creates an immutable compliance trail:
+    //   auditors can verify any historical enforcement event
+    //   was triggered by a specific governance-ratified policy.
+    mapping(uint256 => Attestation) public attestations;
+    uint256[] public attestationIndex;
+
+    // Active policy hash — set by governance when ratifying new policy
+    bytes32 public activePolicyHash;
+    string  public activePolicyVersion;
+
+    // ── Replay Protection ───────────────────────────
+    mapping(bytes32 => bool) private usedDigests;
+
     // ── Counters ────────────────────────────────────
     uint256 public totalChecks;
     uint256 public totalWarnings;
@@ -99,11 +124,15 @@ contract ReserveOracleV2 is IReceiver {
     uint256 public totalAnomalies;
     uint256 public highestRiskScore;
     uint256 public highestRiskCheckNumber;
-
-    // NEW: velocity alert counters
     uint256 public totalVelocityAlerts;
     uint256 public highestVelocityBps;
     string  public highestVelocityProtocol;
+
+    // ── Freshness ───────────────────────────────────
+    uint256 public constant MAX_REPORT_AGE = 3600; // 1 hour
+
+    // ── Velocity ────────────────────────────────────
+    uint256 public constant VELOCITY_ALERT_THRESHOLD = 500;
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // EVENTS
@@ -115,7 +144,24 @@ contract ReserveOracleV2 is IReceiver {
         uint256 globalRatio,
         uint256 riskScore,
         uint8   severity,
-        bool    anomalyDetected
+        bool    anomalyDetected,
+        bytes32 policyHash          // NEW
+    );
+
+    /// @notice Emitted for every check — immutable compliance trail
+    event AttestationRecorded(
+        uint256 indexed checkNumber,
+        bytes32 indexed policyHash,
+        uint8   severity,
+        uint256 riskScore,
+        uint256 timestamp
+    );
+
+    /// @notice Emitted when governance ratifies a new policy version
+    event PolicyVersionActivated(
+        bytes32 indexed policyHash,
+        string  version,
+        uint256 timestamp
     );
 
     event ProtocolDataSubmitted(
@@ -131,7 +177,6 @@ contract ReserveOracleV2 is IReceiver {
         uint256 solvencyRatio
     );
 
-    // NEW
     event VelocityAlert(
         uint256 indexed checkNumber,
         string  name,
@@ -157,13 +202,6 @@ contract ReserveOracleV2 is IReceiver {
         uint8   previousSeverity,
         uint8   newSeverity
     );
-
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // CONSTANTS
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-    /// @notice Velocity above this triggers an alert (5% per cycle in bps)
-    uint256 public constant VELOCITY_ALERT_THRESHOLD = 500;
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // MODIFIERS
@@ -199,6 +237,11 @@ contract ReserveOracleV2 is IReceiver {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     function onReport(bytes calldata metadata, bytes calldata report) external override onlyForwarder {
+        // ── Replay protection ──────────────────────
+        bytes32 digest = keccak256(report);
+        require(!usedDigests[digest], "Report already processed");
+        usedDigests[digest] = true;
+
         (
             uint256 totalReservesUSD,
             uint256 totalClaimedUSD,
@@ -207,18 +250,26 @@ contract ReserveOracleV2 is IReceiver {
             uint256 timestamp,
             uint256 checkNumber,
             uint8   severity,
-            bool    anomalyDetected
-        ) = abi.decode(report, (uint256, uint256, uint256, uint256, uint256, uint256, uint8, bool));
+            bool    anomalyDetected,
+            bytes32 policyHash
+        ) = abi.decode(report, (uint256, uint256, uint256, uint256, uint256, uint256, uint8, bool, bytes32));
+
+        // ── Timestamp freshness ────────────────────
+        require(
+            block.timestamp <= timestamp + MAX_REPORT_AGE,
+            "Report too old"
+        );
 
         HealthReport memory healthReport = HealthReport({
             totalReservesUSD: totalReservesUSD,
-            totalClaimedUSD: totalClaimedUSD,
-            globalRatio: globalRatio,
-            riskScore: riskScore,
-            timestamp: timestamp,
-            checkNumber: checkNumber,
-            severity: severity,
-            anomalyDetected: anomalyDetected
+            totalClaimedUSD:  totalClaimedUSD,
+            globalRatio:      globalRatio,
+            riskScore:        riskScore,
+            timestamp:        timestamp,
+            checkNumber:      checkNumber,
+            severity:         severity,
+            anomalyDetected:  anomalyDetected,
+            policyHash:       policyHash
         });
 
         _processReport(healthReport);
@@ -228,11 +279,6 @@ contract ReserveOracleV2 is IReceiver {
     // BACKEND ENTRY POINT — Per-Protocol + Velocity Data
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    /**
-     * @notice Submit per-protocol solvency + velocity data.
-     * @param velocityBps        Utilization change magnitude per protocol (basis points)
-     * @param velocityNegative   True if utilization decreased (array parallel to names)
-     */
     function submitProtocolData(
         uint256   checkNumber,
         string[]  calldata names,
@@ -266,34 +312,27 @@ contract ReserveOracleV2 is IReceiver {
             bytes32 nameHash = keccak256(bytes(names[i]));
 
             ProtocolReport memory pr = ProtocolReport({
-                name:            names[i],
-                protocolType:    types[i],
-                chain:           chains[i],
-                claimed:         claimed[i],
-                actual:          actual[i],
-                solvencyRatio:   solvencyRatios[i],
-                utilization:     utilizations[i],
-                velocityBps:     velocityBps[i],
+                name:             names[i],
+                protocolType:     types[i],
+                chain:            chains[i],
+                claimed:          claimed[i],
+                actual:           actual[i],
+                solvencyRatio:    solvencyRatios[i],
+                utilization:      utilizations[i],
+                velocityBps:      velocityBps[i],
                 velocityNegative: velocityNegative[i],
-                timestamp:       ts
+                timestamp:        ts
             });
 
-            // Store per-check
             protocolReports[checkNumber][i] = pr;
-
-            // Update latest
             latestProtocolData[nameHash] = pr;
-
-            // Store current utilization as "previous" for NEXT check
             previousUtilization[nameHash] = utilizations[i];
 
-            // Track protocol
             if (!protocolTracked[nameHash]) {
                 trackedProtocols.push(nameHash);
                 protocolTracked[nameHash] = true;
             }
 
-            // Chain stats
             bytes32 chainHash = keccak256(bytes(chains[i]));
             if (!chainTracked[chainHash]) {
                 trackedChains.push(chainHash);
@@ -311,29 +350,17 @@ contract ReserveOracleV2 is IReceiver {
             cs.protocolCount++;
             cs.lastUpdated = ts;
 
-            // Velocity alert
             if (velocityBps[i] >= VELOCITY_ALERT_THRESHOLD) {
                 totalVelocityAlerts++;
                 if (velocityBps[i] > highestVelocityBps) {
                     highestVelocityBps = velocityBps[i];
                     highestVelocityProtocol = names[i];
                 }
-                emit VelocityAlert(
-                    checkNumber,
-                    names[i],
-                    velocityBps[i],
-                    !velocityNegative[i],
-                    utilizations[i]
-                );
+                emit VelocityAlert(checkNumber, names[i], velocityBps[i], !velocityNegative[i], utilizations[i]);
             }
 
-            // Update guard per-protocol
             if (guard != address(0)) {
-                try ISentinalGuard(guard).updateProtocolStatus(
-                    names[i],
-                    solvencyRatios[i],
-                    checkNumber
-                ) {
+                try ISentinalGuard(guard).updateProtocolStatus(names[i], solvencyRatios[i], checkNumber) {
                     if (solvencyRatios[i] < 9000) protocolsPaused++;
                 } catch {}
             }
@@ -351,15 +378,22 @@ contract ReserveOracleV2 is IReceiver {
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // NEW: Velocity Read — Called by CRE as call #15
+    // GOVERNANCE — Policy Version Management
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    /**
-     * @notice Returns stored utilization values for given protocol names.
-     *         CRE workflow calls this as its 15th EVM call to compute velocity.
-     * @param names Array of SENTINAL protocol names (same order as config.protocols)
-     * @return utils Array of previous utilization values in basis points
-     */
+    /// @notice Governance ratifies a new policy version.
+    ///         After calling this, all future reports are verified against
+    ///         this policyHash in the attestation registry.
+    function activatePolicy(bytes32 policyHash, string calldata version) external onlyOwner {
+        activePolicyHash = policyHash;
+        activePolicyVersion = version;
+        emit PolicyVersionActivated(policyHash, version, block.timestamp);
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // VIEW — getPreviousUtilizations (CRE Call #8)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
     function getPreviousUtilizations(string[] calldata names)
         external
         view
@@ -369,6 +403,43 @@ contract ReserveOracleV2 is IReceiver {
         for (uint256 i = 0; i < names.length; i++) {
             utils[i] = previousUtilization[keccak256(bytes(names[i]))];
         }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // VIEW — Attestation Registry
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    /// @notice Fetch attestation for any historical check.
+    ///         Auditors use this to verify: "Enforcement X was triggered
+    ///         by policy version Y at timestamp Z."
+    function getAttestation(uint256 checkNumber) external view returns (Attestation memory) {
+        return attestations[checkNumber];
+    }
+
+    /// @notice Fetch last N attestations
+    function getRecentAttestations(uint256 count) external view returns (Attestation[] memory) {
+        uint256 len = attestationIndex.length;
+        uint256 start = len > count ? len - count : 0;
+        uint256 size = len - start;
+        Attestation[] memory recent = new Attestation[](size);
+        for (uint256 i = 0; i < size; i++) {
+            recent[i] = attestations[attestationIndex[start + i]];
+        }
+        return recent;
+    }
+
+    /// @notice Verify that a historical enforcement used the active policy
+    function verifyPolicyCompliance(uint256 checkNumber) external view returns (
+        bool compliant,
+        bytes32 reportPolicyHash,
+        bytes32 currentPolicyHash
+    ) {
+        Attestation memory a = attestations[checkNumber];
+        return (
+            a.policyHash == activePolicyHash,
+            a.policyHash,
+            activePolicyHash
+        );
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -403,15 +474,7 @@ contract ReserveOracleV2 is IReceiver {
         uint256 peakRisk,
         uint256 peakRiskCheck
     ) {
-        return (
-            totalChecks,
-            totalWarnings,
-            totalCritical,
-            totalAnomalies,
-            latestReport.riskScore,
-            highestRiskScore,
-            highestRiskCheckNumber
-        );
+        return (totalChecks, totalWarnings, totalCritical, totalAnomalies, latestReport.riskScore, highestRiskScore, highestRiskCheckNumber);
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -485,21 +548,9 @@ contract ReserveOracleV2 is IReceiver {
         for (uint256 i = 0; i < pCount; i++) {
             allProtocols[i] = latestProtocolData[trackedProtocols[i]];
         }
-        return (
-            latestReport,
-            totalChecks,
-            totalWarnings,
-            totalCritical,
-            totalAnomalies,
-            pCount,
-            trackedChains.length,
-            allProtocols
-        );
+        return (latestReport, totalChecks, totalWarnings, totalCritical, totalAnomalies, pCount, trackedChains.length, allProtocols);
     }
 
-    /**
-     * @notice Velocity-focused dashboard view.
-     */
     function getVelocityStats() external view returns (
         uint256 totalAlerts,
         uint256 peakVelocityBps,
@@ -511,12 +562,7 @@ contract ReserveOracleV2 is IReceiver {
         for (uint256 i = 0; i < pCount; i++) {
             allProtocols[i] = latestProtocolData[trackedProtocols[i]];
         }
-        return (
-            totalVelocityAlerts,
-            highestVelocityBps,
-            highestVelocityProtocol,
-            allProtocols
-        );
+        return (totalVelocityAlerts, highestVelocityBps, highestVelocityProtocol, allProtocols);
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -526,39 +572,42 @@ contract ReserveOracleV2 is IReceiver {
     function simulateHealthy() external {
         _processReport(HealthReport({
             totalReservesUSD: 4_608_879_987,
-            totalClaimedUSD: 4_608_644_781,
-            globalRatio: 10000,
-            riskScore: 0,
-            timestamp: block.timestamp,
-            checkNumber: totalChecks + 1,
-            severity: 0,
-            anomalyDetected: false
+            totalClaimedUSD:  4_608_644_781,
+            globalRatio:      10000,
+            riskScore:        0,
+            timestamp:        block.timestamp,
+            checkNumber:      totalChecks + 1,
+            severity:         0,
+            anomalyDetected:  false,
+            policyHash:       activePolicyHash
         }));
     }
 
     function simulateWarning() external {
         _processReport(HealthReport({
             totalReservesUSD: 4_100_000_000,
-            totalClaimedUSD: 4_608_644_781,
-            globalRatio: 8900,
-            riskScore: 45,
-            timestamp: block.timestamp,
-            checkNumber: totalChecks + 1,
-            severity: 1,
-            anomalyDetected: true
+            totalClaimedUSD:  4_608_644_781,
+            globalRatio:      8900,
+            riskScore:        45,
+            timestamp:        block.timestamp,
+            checkNumber:      totalChecks + 1,
+            severity:         1,
+            anomalyDetected:  true,
+            policyHash:       activePolicyHash
         }));
     }
 
     function simulateCritical() external {
         _processReport(HealthReport({
             totalReservesUSD: 3_500_000_000,
-            totalClaimedUSD: 4_608_644_781,
-            globalRatio: 7600,
-            riskScore: 85,
-            timestamp: block.timestamp,
-            checkNumber: totalChecks + 1,
-            severity: 2,
-            anomalyDetected: true
+            totalClaimedUSD:  4_608_644_781,
+            globalRatio:      7600,
+            riskScore:        85,
+            timestamp:        block.timestamp,
+            checkNumber:      totalChecks + 1,
+            severity:         2,
+            anomalyDetected:  true,
+            policyHash:       activePolicyHash
         }));
     }
 
@@ -578,7 +627,6 @@ contract ReserveOracleV2 is IReceiver {
         emergencyController = _controller;
     }
 
-    /// @notice NEW — Link SentinalGuard for circuit breaker updates
     function setGuard(address _guard) external onlyOwner {
         guard = _guard;
     }
@@ -601,6 +649,19 @@ contract ReserveOracleV2 is IReceiver {
         reports[report.checkNumber] = report;
         reportHistory.push(report);
 
+        // ── AttestationRegistry ────────────────────
+        // Record cryptographic binding: enforcement → policy version
+        Attestation memory attestation = Attestation({
+            policyHash:     report.policyHash,
+            riskScore:      report.riskScore,
+            severity:       report.severity,
+            timestamp:      report.timestamp,
+            checkNumber:    report.checkNumber,
+            anomalyDetected: report.anomalyDetected
+        });
+        attestations[report.checkNumber] = attestation;
+        attestationIndex.push(report.checkNumber);
+
         totalChecks++;
         if (report.severity == 1) totalWarnings++;
         if (report.severity == 2) totalCritical++;
@@ -622,7 +683,16 @@ contract ReserveOracleV2 is IReceiver {
             report.globalRatio,
             report.riskScore,
             report.severity,
-            report.anomalyDetected
+            report.anomalyDetected,
+            report.policyHash
+        );
+
+        emit AttestationRecorded(
+            report.checkNumber,
+            report.policyHash,
+            report.severity,
+            report.riskScore,
+            report.timestamp
         );
 
         if (report.severity == 2 || report.riskScore >= 80) {

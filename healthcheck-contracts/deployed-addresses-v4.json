@@ -1,0 +1,11 @@
+{
+  "network": "sepolia",
+  "ReserveOracleV2": "0x985eb2859e7502f38d3944a4a6d10aa5d7158b24",
+  "SentinalGuard": "0xfc3082f4954f36ce7794e6c49769b9bf819fc80a",
+  "forwarder": "0x15fC6ae953E024d975e77382eEeC56A9101f9F88",
+  "reporter": "0xF8A440f0c3912F42dF794983B8164cB6572fCBCC",
+  "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+  "policyVersion": "v1.0.0",
+  "linked": true,
+  "deployedAt": "2026-03-05T08:58:41.345Z"
+}
