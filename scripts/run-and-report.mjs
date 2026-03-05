@@ -6,11 +6,14 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { spawn } from 'child_process';
+const shell = process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe';
+import path from 'path';
 
 const SERVER_URL = process.env.SENTINAL_SERVER || 'http://localhost:3001';
 const broadcast = process.argv.includes('--broadcast');
 const DELAY_MS = 60 * 1000;
-const WORKFLOW_DIR = './cre-workflow/healthcheck-monitor';
+const WORKFLOW_DIR = path.resolve('D:\\github\\SENTINAL\\cre-workflow\\healthcheck-monitor');
+const CRE_EXE = 'C:\\Users\\DHRUV\\AppData\\Local\\Programs\\cre\\cre.exe';
 
 // ── Colors ────────────────────────────────────────
 const C = {
@@ -98,10 +101,9 @@ function runWorkflow() {
     sep();
     gap();
 
-    const proc = spawn('cre', args, {
-      cwd: WORKFLOW_DIR,
-      shell: true,
-    });
+const proc = spawn(CRE_EXE, args, {
+    cwd: WORKFLOW_DIR,
+});
 
     let fullOutput = '';
     let resultJson = null;

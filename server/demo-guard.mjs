@@ -9,8 +9,8 @@ import { privateKeyToAccount } from 'viem/accounts';
 
 // ── CONFIG ────────────────────────────────────────
 const PRIVATE_KEY = process.env.PRIVATE_KEY || 'YOUR_PRIVATE_KEY_HERE';
-const ORACLE_ADDRESS = '0x71f540d7dac0fc71b6652b1d8aee9012638095ca';
-const GUARD_ADDRESS = '0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905';
+const ORACLE_ADDRESS = '0x985eb2859e7502f38d3944a4a6d10aa5d7158b24';
+const GUARD_ADDRESS = '0xfc3082f4954f36ce7794e6c49769b9bf819fc80a';
 const VAULT_ADDRESS = '0x29Ac4504A053f8Ac60127366fF69f91D4F32Bf58';
 const RPC_URL = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
 

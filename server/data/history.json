@@ -2650,5 +2650,3039 @@
       }
     ],
     "receivedAt": "2026-03-04T17:04:51.058Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414456282",
+      "totalClaimedUSD": "4414400804",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 24,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3728758553 | Liq=$1349061790 | Borrows=$2379751850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6382,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293642322 | Liq=$131974497 | Borrows=$161667600 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391999929 | Liq=$104193921 | Borrows=$287806622 | Util=73.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7342,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277946 ETH | Pooled=9277946 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T09:55:35.735Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414456282",
+      "totalClaimedUSD": "4414400804",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 25,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3728758553 | Liq=$1349061790 | Borrows=$2379751850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6382,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293642322 | Liq=$131974497 | Borrows=$161667600 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391999929 | Liq=$104193921 | Borrows=$287806622 | Util=73.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7342,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277946 ETH | Pooled=9277946 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T09:57:06.824Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414456282",
+      "totalClaimedUSD": "4414400804",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 26,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3728758553 | Liq=$1349061790 | Borrows=$2379751850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6382,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293642322 | Liq=$131974497 | Borrows=$161667600 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391999929 | Liq=$104193921 | Borrows=$287806622 | Util=73.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7342,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277946 ETH | Pooled=9277946 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x583717d92398b504408d9b0db403a04a715e3ca892b1caf34d7b2a31e638248f",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T09:57:50.416Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414737162",
+      "totalClaimedUSD": "4414681577",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 27,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729030734 | Liq=$1349323072 | Borrows=$2379762850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293650914 | Liq=$131980866 | Borrows=$161669830 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391999929 | Liq=$104193921 | Borrows=$287806622 | Util=73.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7342,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277951 ETH | Pooled=9277951 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xdc4422b70fea269f87fd5e3d63267b9337dee0269a635ab03a6577330b05a23b",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T09:59:26.693Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414737162",
+      "totalClaimedUSD": "4414681577",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 28,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729030734 | Liq=$1349323072 | Borrows=$2379762850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293650914 | Liq=$131980866 | Borrows=$161669830 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391999929 | Liq=$104193921 | Borrows=$287806622 | Util=73.4%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7342,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277951 ETH | Pooled=9277951 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x61bc8b3551494c1a1f092f537842f94dc0ce1ea431964b17bf2f44331563d409",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:00:14.166Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414680339",
+      "totalClaimedUSD": "4414624739",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 29,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729030734 | Liq=$1349323072 | Borrows=$2379762850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293650914 | Liq=$131980866 | Borrows=$161669830 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391943091 | Liq=$103931238 | Borrows=$288012481 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7348,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277951 ETH | Pooled=9277951 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x3e5be50fda454e7c748e4d8e5f5431f2b95ca61cb9a4555df9d58b69f41e500c",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:01:50.290Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414680339",
+      "totalClaimedUSD": "4414624739",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 30,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729030734 | Liq=$1349323072 | Borrows=$2379762850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293650914 | Liq=$131980866 | Borrows=$161669830 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391943091 | Liq=$103931238 | Borrows=$288012481 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7348,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277951 ETH | Pooled=9277951 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:02:12.862Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414680339",
+      "totalClaimedUSD": "4414624739",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 31,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729030734 | Liq=$1349323072 | Borrows=$2379762850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293650914 | Liq=$131980866 | Borrows=$161669830 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391943091 | Liq=$103931238 | Borrows=$288012481 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7348,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277951 ETH | Pooled=9277951 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:03:43.454Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4414680339",
+      "totalClaimedUSD": "4414624739",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 32,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729030734 | Liq=$1349323072 | Borrows=$2379762850 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293650914 | Liq=$131980866 | Borrows=$161669830 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5505,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391943091 | Liq=$103931238 | Borrows=$288012481 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7348,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9277951 ETH | Pooled=9277951 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:05:05.940Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4415322682",
+      "totalClaimedUSD": "4415266961",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 33,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729615138 | Liq=$1349907126 | Borrows=$2379763301 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293662608 | Liq=$131952753 | Borrows=$161709644 | Util=55.1%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5506,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391989215 | Liq=$103594492 | Borrows=$288395366 | Util=73.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7357,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278004 ETH | Pooled=9278004 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xb21f63df57e95e0a3680f8e0318ef71b03bbf9cd20182e13bf22fb7547c938f7",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:07:26.612Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4415250268",
+      "totalClaimedUSD": "4415194328",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 34,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729331950 | Liq=$1349421528 | Borrows=$2379965910 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293848909 | Liq=$132139882 | Borrows=$161708821 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5503,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392013469 | Liq=$103745081 | Borrows=$288269045 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7353,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278005 ETH | Pooled=9278005 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x16e71da0de6a37109d95ca728f19a2dfacd366bbae6854aa07c217ae902fc77f",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:15:02.974Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4415250268",
+      "totalClaimedUSD": "4415194328",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 35,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729331950 | Liq=$1349421528 | Borrows=$2379965910 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293848909 | Liq=$132139882 | Borrows=$161708821 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5503,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392013469 | Liq=$103745081 | Borrows=$288269045 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7353,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278005 ETH | Pooled=9278005 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x144d13fb4147e3bb5365d96c2ac9a42abe36a226b69ab8750951f817ea60ddf8",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:16:38.806Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4415250268",
+      "totalClaimedUSD": "4415194328",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 36,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729331950 | Liq=$1349421528 | Borrows=$2379965910 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6381,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293848909 | Liq=$132139882 | Borrows=$161708821 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5503,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392013469 | Liq=$103745081 | Borrows=$288269045 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7353,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278005 ETH | Pooled=9278005 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x4efce0cbef0280420739e18c46bb84d7e2ef4ab237c26e4b0272dbe6f4fabc50",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:17:14.149Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416117810",
+      "totalClaimedUSD": "4416061763",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 37,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730197961 | Liq=$1350288385 | Borrows=$2379965164 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293850333 | Liq=$132136713 | Borrows=$161713420 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5503,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392013469 | Liq=$103745081 | Borrows=$288269045 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7353,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278005 ETH | Pooled=9278005 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xb90c1832fc0882999f4aaa86f50d398c6a91391a7c02fbd1cd959b3728b4f458",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:18:50.912Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416123315",
+      "totalClaimedUSD": "4416067255",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 38,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730197961 | Liq=$1350288385 | Borrows=$2379965164 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293850333 | Liq=$132136713 | Borrows=$161713420 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5503,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392018961 | Liq=$103519213 | Borrows=$288500418 | Util=73.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7359,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278005 ETH | Pooled=9278005 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xe183b465f0392d68f30d6ddf9a403029d834be690e871470007a97dde1ab3248",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:20:26.317Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416123315",
+      "totalClaimedUSD": "4416067255",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 39,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730197961 | Liq=$1350288385 | Borrows=$2379965164 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293850333 | Liq=$132136713 | Borrows=$161713420 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5503,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392018961 | Liq=$103519213 | Borrows=$288500418 | Util=73.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7359,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278005 ETH | Pooled=9278005 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x99ef9ef363c30e9cb108a00016bd8b3607d5892d7d40c5348801366dd900365e",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:22:15.152Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416123315",
+      "totalClaimedUSD": "4416067255",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 40,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730197961 | Liq=$1350288385 | Borrows=$2379965164 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293850333 | Liq=$132136713 | Borrows=$161713420 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5503,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392018961 | Liq=$103519213 | Borrows=$288500418 | Util=73.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7359,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278005 ETH | Pooled=9278005 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xa75a7b87da4a018e32583ec29bc648bc440512bcc3d7c129e0d91bcc616afded",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:23:51.122Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416080708",
+      "totalClaimedUSD": "4416024540",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 41,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730200474 | Liq=$1350299519 | Borrows=$2379956644 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293805105 | Liq=$132089694 | Borrows=$161715218 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5504,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$392018961 | Liq=$103519213 | Borrows=$288500418 | Util=73.6%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7359,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278073 ETH | Pooled=9278073 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x9844d46917293da43cce0b9fa03e86d44e8f7d5f4549453a939ea3523be2b59c",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:25:26.502Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416058641",
+      "totalClaimedUSD": "4416002458",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 42,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730200474 | Liq=$1350299519 | Borrows=$2379956644 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293805105 | Liq=$132089694 | Borrows=$161715218 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5504,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391996879 | Liq=$103766593 | Borrows=$288230972 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7352,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278073 ETH | Pooled=9278073 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x305d769632e92f894733d278808243cb596323299a12ff3c536d8b3d8e3afc96",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:27:03.402Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416058641",
+      "totalClaimedUSD": "4416002458",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 43,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730200474 | Liq=$1350299519 | Borrows=$2379956644 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293805105 | Liq=$132089694 | Borrows=$161715218 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5504,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391996879 | Liq=$103766593 | Borrows=$288230972 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7352,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278073 ETH | Pooled=9278073 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xd58e50c0af06b5f84362600a968fef53acacea205e318072daf96ff336cc4b36",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:28:38.527Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4416058641",
+      "totalClaimedUSD": "4416002458",
+      "worstProtocol": "Aave V3 USDC (Arbitrum)",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 44,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730200474 | Liq=$1350299519 | Borrows=$2379956644 | Util=63.8%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$293805105 | Liq=$132089694 | Borrows=$161715218 | Util=55.0%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5504,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$391996879 | Liq=$103766593 | Borrows=$288230972 | Util=73.5%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7352,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9278073 ETH | Pooled=9278073 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x7db1c53ab8282d55abfe458453114137e2c1fb61486c2a08b25c5739f35cc1cb",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T10:30:14.796Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4419956958",
+      "totalClaimedUSD": "4419896322",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 45,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730385820 | Liq=$1347816340 | Borrows=$2382628844 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6387,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298570981 | Liq=$135666979 | Borrows=$162904043 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5456,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390939521 | Liq=$102615139 | Borrows=$288325610 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7375,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245131 ETH | Pooled=9245131 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xa8d4eecdfa42d2dc3f6f5c7db804fc628140112cdd20f779b4167940e4906879",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:20:27.526Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418668249",
+      "totalClaimedUSD": "4418607492",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 46,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729107719 | Liq=$1346294203 | Borrows=$2382872982 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298560252 | Liq=$135618374 | Borrows=$162941940 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5457,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390939521 | Liq=$102615139 | Borrows=$288325610 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7375,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245133 ETH | Pooled=9245133 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x160f0b050e5f8081e1815e36a0709031079ed5c009fb3fa657e251926ceae97f",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:22:26.606Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418799817",
+      "totalClaimedUSD": "4418738924",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 47,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729229740 | Liq=$1346414280 | Borrows=$2382875027 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298562394 | Liq=$135617965 | Borrows=$162944497 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5457,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390946790 | Liq=$102619683 | Borrows=$288328364 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7375,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245133 ETH | Pooled=9245133 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xd5fe2023ee04bd36986d28b2505f159c96f7f099d796233a9cb670003b1d9831",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:32:03.208Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418799817",
+      "totalClaimedUSD": "4418738924",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 48,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729229740 | Liq=$1346414280 | Borrows=$2382875027 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298562394 | Liq=$135617965 | Borrows=$162944497 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5457,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390946790 | Liq=$102619683 | Borrows=$288328364 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7375,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245133 ETH | Pooled=9245133 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x0e52fe6cd316cee52902bdc12a8b30ffdab34ed1e306655a1a03dd3ea63aea2b",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:33:52.520Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418818979",
+      "totalClaimedUSD": "4418757966",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 49,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729364701 | Liq=$1346534633 | Borrows=$2382889734 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298580604 | Liq=$135520640 | Borrows=$163060038 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5461,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390812661 | Liq=$102374625 | Borrows=$288439308 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245144 ETH | Pooled=9245144 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xd66cb3f782d472fd22d3f885ac0d0d1580e7125f66b9fa6bb4b35ab4d9969f4a",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:35:51.392Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418818979",
+      "totalClaimedUSD": "4418757966",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 50,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729364701 | Liq=$1346534633 | Borrows=$2382889734 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298580604 | Liq=$135520640 | Borrows=$163060038 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5461,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390812661 | Liq=$102374625 | Borrows=$288439308 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245144 ETH | Pooled=9245144 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x9e7744178ef0312096472a4f8ab70d01935ac01936282bc1784d9d5cf187382d",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:37:26.339Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418818979",
+      "totalClaimedUSD": "4418757966",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 51,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729364701 | Liq=$1346534633 | Borrows=$2382889734 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298580604 | Liq=$135520640 | Borrows=$163060038 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5461,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390812661 | Liq=$102374625 | Borrows=$288439308 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245144 ETH | Pooled=9245144 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x429cb3195b61703b68c4e6459c07b17328924a258dc26febab732b68756f2447",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:39:02.106Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418818979",
+      "totalClaimedUSD": "4418757966",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 52,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729364701 | Liq=$1346534633 | Borrows=$2382889734 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298580604 | Liq=$135520640 | Borrows=$163060038 | Util=54.6%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5461,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390812661 | Liq=$102374625 | Borrows=$288439308 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245144 ETH | Pooled=9245144 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x54e2bfa6e11490754f02156a3c8a1a6ceaad5ba0f9b5b103cc5d142083963ff5",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:40:50.692Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4419488243",
+      "totalClaimedUSD": "4419427122",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 53,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730341771 | Liq=$1347507891 | Borrows=$2382893648 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6387,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298272690 | Liq=$135119053 | Borrows=$163153716 | Util=54.7%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5469,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390812661 | Liq=$102374625 | Borrows=$288439308 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245176 ETH | Pooled=9245176 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xafc0af3e948bbb261b83b1d9d73066a8f4eb228a3db202a304a0af86d8fa886d",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:42:26.304Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4419501516",
+      "totalClaimedUSD": "4419440379",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 54,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730341771 | Liq=$1347507891 | Borrows=$2382893648 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6387,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298272690 | Liq=$135119053 | Borrows=$163153716 | Util=54.7%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5469,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390825918 | Liq=$102386096 | Borrows=$288441109 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245176 ETH | Pooled=9245176 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xfa767574c053090242cb01ff4040a765e9060cd99479082fd3737d8e220fe205",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:44:02.283Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4419501516",
+      "totalClaimedUSD": "4419440379",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 55,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3730341771 | Liq=$1347507891 | Borrows=$2382893648 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6387,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298272690 | Liq=$135119053 | Borrows=$163153716 | Util=54.7%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5469,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390825918 | Liq=$102386096 | Borrows=$288441109 | Util=73.8%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7380,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245176 ETH | Pooled=9245176 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0x4eea604782bec55b7fa9086d8ecee0bd3a8315b6009e007e5cb62e7e33a31f3a",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:46:54.199Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418875744",
+      "totalClaimedUSD": "4418814488",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 56,
+    "contagion": {
+      "affectedChains": [],
+      "description": "First run — no baseline for contagion detection",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": true,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729746901 | Liq=$1346852500 | Borrows=$2382954269 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298241538 | Liq=$135088283 | Borrows=$163153341 | Util=54.7%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5470,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390826049 | Liq=$102628022 | Borrows=$288199327 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7374,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245176 ETH | Pooled=9245176 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xbc8ae7c3e312ee490dba4cd1531fa6e0e998f9d2b028714df6b76f6a65077ad4",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:48:26.844Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418875744",
+      "totalClaimedUSD": "4418814488",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 57,
+    "contagion": {
+      "affectedChains": [],
+      "description": "No cross-chain contagion detected",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": false,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729746901 | Liq=$1346852500 | Borrows=$2382954269 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298241538 | Liq=$135088283 | Borrows=$163153341 | Util=54.7%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5470,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390826049 | Liq=$102628022 | Borrows=$288199327 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7374,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245176 ETH | Pooled=9245176 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xf0451adb278ecdfc768e7ee88c9c760f145af2bb323776e4ffcaa53b67c1e060",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:50:51.595Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418875744",
+      "totalClaimedUSD": "4418814488",
+      "worstProtocol": "",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 58,
+    "contagion": {
+      "affectedChains": [],
+      "description": "No cross-chain contagion detected",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": false,
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729746901 | Liq=$1346852500 | Borrows=$2382954269 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298241538 | Liq=$135088283 | Borrows=$163153341 | Util=54.7%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5470,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390826049 | Liq=$102628022 | Borrows=$288199327 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7374,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245176 ETH | Pooled=9245176 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xbedb6f158a3d9f3769c5643db1ffddc69d9e7e861a424f07c4a3d8dbbfa45845",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T14:53:02.592Z"
+  },
+  {
+    "aggregate": {
+      "totalActualUSD": "4418718953",
+      "totalClaimedUSD": "4418657452",
+      "worstProtocol": "Lido stETH",
+      "worstSolvency": "100.00"
+    },
+    "anomalyDetected": false,
+    "chains": [
+      "ethereum-mainnet",
+      "ethereum-mainnet-arbitrum-1",
+      "ethereum-mainnet-base-1"
+    ],
+    "checkNumber": 59,
+    "contagion": {
+      "affectedChains": [],
+      "description": "No cross-chain contagion detected",
+      "detected": false,
+      "tierEscalation": 0
+    },
+    "isFirstRun": false,
+    "offchain": [
+      {
+        "slug": "aave-v3",
+        "tvl": "26666420793"
+      },
+      {
+        "slug": "lido",
+        "tvl": "19658639053"
+      }
+    ],
+    "policy": {
+      "fromSecret": false,
+      "hash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+      "version": "fallback-v1"
+    },
+    "policyHash": "0xb776f6b6eaa75ef73e094898a7aedb0312c7a8846d08041679e9de743dd9e5da",
+    "protocols": [
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "Deposits=$3729596347 | Liq=$1346686970 | Borrows=$2382969447 | Util=63.9%",
+        "name": "Aave V3 USDC (Ethereum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 6389,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-arbitrum-1",
+        "contagionAffected": false,
+        "details": "Deposits=$298233767 | Liq=$134932025 | Borrows=$163301842 | Util=54.8%",
+        "name": "Aave V3 USDC (Arbitrum)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 5475,
+        "velocityAlert": false,
+        "velocityBps": 5,
+        "velocityNegative": false
+      },
+      {
+        "chain": "ethereum-mainnet-base-1",
+        "contagionAffected": false,
+        "details": "Deposits=$390827338 | Liq=$102652250 | Borrows=$288176417 | Util=73.7%",
+        "name": "Aave V3 USDC (Base)",
+        "solvency": "100.00",
+        "type": "aave",
+        "utilizationBps": 7373,
+        "velocityAlert": false,
+        "velocityBps": 1,
+        "velocityNegative": true
+      },
+      {
+        "chain": "ethereum-mainnet",
+        "contagionAffected": false,
+        "details": "stETH=9245186 ETH | Pooled=9245186 ETH | Backing=100.00%",
+        "name": "Lido stETH",
+        "solvency": "100.00",
+        "type": "lido",
+        "utilizationBps": 0,
+        "velocityAlert": false,
+        "velocityBps": 0,
+        "velocityNegative": false
+      }
+    ],
+    "riskScore": 0,
+    "severity": "HEALTHY",
+    "success": true,
+    "txHash": "0xde4ddd1a2e031a3dd0ca60cf86e9c059dcdf8f8efa699c13d6d33b4b193ba6f7",
+    "velocityAlerts": [],
+    "receivedAt": "2026-03-05T15:02:26.711Z"
   }
 ]
