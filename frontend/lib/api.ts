@@ -3,10 +3,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONTRACT ADDRESSES (V3)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-export const ORACLE_ADDRESS = '0x71f540d7dac0fc71b6652b1d8aee9012638095ca';
-export const GUARD_ADDRESS = '0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905';
+export const ORACLE_ADDRESS = '0x985eb2859e7502f38d3944a4a6d10aa5d7158b24';
+export const GUARD_ADDRESS = '0xfc3082f4954f36ce7794e6c49769b9bf819fc80a';
 export const CONTROLLER_ADDRESS = '0x9153d2ded62384c06e30aa89997ba59d5c523085';
-export const VAULT_ADDRESS = '0x29Ac4504A053f8Ac60127366fF69f91D4F32Bf58';
+export const VAULT_ADDRESS = '0xFC7278d24159026C24d8b8469471331a74b8406A';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TYPES

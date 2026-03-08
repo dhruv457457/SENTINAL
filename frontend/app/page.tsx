@@ -15,6 +15,7 @@ import { HistoryChart } from '@/components/HistoryChart';
 import { ChainBadge } from '@/components/ChainBadge';
 import { GuardPanel } from '@/components/GuardPanel';
 import { VaultCard } from '@/components/VaultCard';
+
 // ── Icons ──────────────────────────────────────
 const ShieldIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -64,8 +65,21 @@ const ZapIcon = () => (
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
   </svg>
 );
+const MonitorIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+    <line x1="8" y1="21" x2="16" y2="21" />
+    <line x1="12" y1="17" x2="12" y2="21" />
+  </svg>
+);
+const GuardTabIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
 
 const POLL_INTERVAL = 15_000;
+type Tab = 'monitor' | 'guard';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // DASHBOARD
@@ -77,6 +91,7 @@ export default function Dashboard() {
   const [guard, setGuard] = useState<GuardStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [lastFetch, setLastFetch] = useState<Date | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>('monitor');
 
   const loadData = useCallback(async () => {
     try {
@@ -108,7 +123,7 @@ export default function Dashboard() {
       <div className="min-h-screen grid-bg flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-sentinel-accent/10 border border-sentinel-accent/30 flex items-center justify-center animate-pulse">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00E676" strokeWidth="2">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00D4AA" strokeWidth="2">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
@@ -157,240 +172,325 @@ export default function Dashboard() {
         guardPaused={guardPaused}
       />
 
+      {/* ── Tab Bar ─────────────────────────────── */}
+      <div className="sticky top-[65px] z-30 border-b border-sentinel-border bg-sentinel-bg/80 backdrop-blur-sm">
+        <div className="max-w-[1440px] mx-auto px-6">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setActiveTab('monitor')}
+              className={`flex items-center gap-2 px-4 py-3 text-xs font-mono tracking-wider border-b-2 transition-all ${
+                activeTab === 'monitor'
+                  ? 'border-sentinel-accent text-sentinel-accent'
+                  : 'border-transparent text-sentinel-muted hover:text-sentinel-text hover:border-sentinel-border'
+              }`}
+            >
+              <MonitorIcon />
+              MONITOR
+            </button>
+            <button
+              onClick={() => setActiveTab('guard')}
+              className={`flex items-center gap-2 px-4 py-3 text-xs font-mono tracking-wider border-b-2 transition-all relative ${
+                activeTab === 'guard'
+                  ? 'border-sentinel-accent text-sentinel-accent'
+                  : 'border-transparent text-sentinel-muted hover:text-sentinel-text hover:border-sentinel-border'
+              }`}
+            >
+              <GuardTabIcon />
+              GUARD &amp; VAULT
+              {guardPaused && (
+                <span className="ml-1 w-1.5 h-1.5 rounded-full bg-sentinel-critical animate-pulse inline-block" />
+              )}
+              {!guardPaused && velocityAlerts.length > 0 && (
+                <span className="ml-1 w-1.5 h-1.5 rounded-full bg-sentinel-yellow animate-pulse inline-block" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <main className="max-w-[1440px] mx-auto px-6 py-8">
 
-        {/* ── Hero ─────────────────────────────── */}
-        <section className="mb-10 animate-fade-in">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <StatusBadge severity={latest.severity} />
-                {latest.anomalyDetected && (
-                  <span className="px-3 py-1 rounded-full border border-sentinel-critical/30 bg-sentinel-critical/10 text-sentinel-critical text-xs font-mono">
-                    ⚠ ANOMALY DETECTED
-                  </span>
-                )}
-                {guardPaused && (
-                  <span className="px-3 py-1 rounded-full border border-sentinel-critical/40 bg-sentinel-critical/10 text-sentinel-critical text-xs font-mono animate-pulse">
-                    🛡️ CIRCUIT BREAKER ACTIVE
-                  </span>
-                )}
-                {isFirstRun && (
-                  <span className="px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-mono">
-                    📌 SEEDING BASELINE
-                  </span>
-                )}
-              </div>
-              <p className="text-sentinel-muted text-sm font-body max-w-lg">
-                Monitoring {latest.protocols.length} protocols across {latest.chains.length} chains
-                with {formatUSD(latest.aggregate.totalActualUSD)} in aggregate reserves.
-                Powered by Chainlink CRE · DON-signed reports · SentinalGuard circuit breaker.
-              </p>
-            </div>
-            <RiskGauge score={latest.riskScore} />
-          </div>
-        </section>
-
-        {/* ── Chain Coverage ─────────────────────── */}
-        <section className="mb-8 animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">CHAIN COVERAGE</span>
-            <div className="flex-1 h-px bg-sentinel-border" />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {latest.chains.map(chain => (
-              <ChainBadge key={chain} chain={chain} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Key Metrics ────────────────────────── */}
-        <section className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">KEY METRICS</span>
-            <div className="flex-1 h-px bg-sentinel-border" />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-            <StatCard label="Reserves" value={formatUSD(latest.aggregate.totalActualUSD)} icon={<DollarIcon />} color="#00E676" delay={50} />
-            <StatCard label="Protocols" value={latest.protocols.length} icon={<LayersIcon />} color="#3B82F6" delay={100} />
-            <StatCard label="Chains" value={latest.chains.length} icon={<LinkIcon />} color="#8B5CF6" delay={150} />
-            <StatCard label="Total TVL" value={formatUSD(totalTVL)} icon={<GlobeIcon />} color="#06B6D4" delay={200} subtitle="DeFiLlama" />
-            <StatCard label="Checks" value={history.length} icon={<ShieldIcon />} color="#F59E0B" delay={250} />
-            <StatCard label="Anomalies" value={history.filter(h => h.anomalyDetected).length} icon={<AlertIcon />} color={history.some(h => h.anomalyDetected) ? '#FF1744' : '#64748B'} delay={300} />
-            <StatCard label="⚡ Vel Alerts" value={totalVelocityAlertsInHistory} icon={<ZapIcon />} color={totalVelocityAlertsInHistory > 0 ? '#FF1744' : '#64748B'} delay={350} />
-            <StatCard label="Registered" value={guard?.registered ?? '—'} icon={<ShieldIcon />} color="#00E676" delay={400} subtitle="on guard" />
-          </div>
-        </section>
-
-        {/* ── Protocol Grid ──────────────────────── */}
-        <section className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">PROTOCOL SOLVENCY</span>
-            <div className="flex-1 h-px bg-sentinel-border" />
-            {!isFirstRun && velocityAlerts.length > 0 && (
-              <span className="text-[10px] font-mono text-sentinel-critical">
-                ⚡ {velocityAlerts.length} velocity spike{velocityAlerts.length > 1 ? 's' : ''} detected
-              </span>
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {latest.protocols.map((protocol, i) => (
-              <ProtocolCard key={protocol.name} protocol={protocol} delay={i * 80} />
-            ))}
-          </div>
-        </section>
-
-        {/* ── Guard Panel + History ──────────────── */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-          <div className="lg:col-span-1 flex flex-col gap-4">
-            <GuardPanel
-              status={guard}
-              velocityAlerts={velocityAlerts}
-              isFirstRun={isFirstRun}
-            />
-            <VaultCard guardPaused={guardPaused} />
-          </div>
-
-          <div className="lg:col-span-2 bg-sentinel-card border border-sentinel-border rounded-xl p-6 animate-slide-up"
-            style={{ animationDelay: '400ms' }}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <ActivityIcon />
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">RISK HISTORY</span>
-              </div>
-              <span className="text-xs font-mono text-sentinel-muted">
-                Last {Math.min(history.length, 30)} checks
-              </span>
-            </div>
-            <HistoryChart history={history} />
-          </div>
-        </section>
-
-        {/* ── Offchain TVL ────────────────────────── */}
-        <section className="mb-8 animate-slide-up" style={{ animationDelay: '500ms' }}>
-          <div className="bg-sentinel-card border border-sentinel-border rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <GlobeIcon />
-              <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">OFFCHAIN TVL — DEFI LLAMA</span>
-              <div className="flex-1 h-px bg-sentinel-border" />
-              <span className="text-[10px] font-mono text-sentinel-muted">DON consensus median</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {latest.offchain.map(o => (
-                <div key={o.slug} className="flex items-center justify-between p-4 rounded-lg bg-sentinel-bg border border-sentinel-border">
-                  <div>
-                    <span className="font-mono text-sm text-sentinel-text capitalize">{o.slug}</span>
-                    <span className="block text-[10px] font-mono text-sentinel-muted mt-0.5">
-                      Cross-referenced against onchain data
-                    </span>
+        {/* ════════════════════════════════════════
+            TAB: MONITOR
+            ════════════════════════════════════════ */}
+        {activeTab === 'monitor' && (
+          <>
+            {/* ── Hero ─────────────────────────────── */}
+            <section className="mb-10 animate-fade-in">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-3 mb-3 flex-wrap">
+                    <StatusBadge severity={latest.severity} />
+                    {latest.anomalyDetected && (
+                      <span className="px-3 py-1 rounded-full border border-sentinel-critical/30 bg-sentinel-critical/10 text-sentinel-critical text-xs font-mono">
+                        ⚠ ANOMALY DETECTED
+                      </span>
+                    )}
+                    {guardPaused && (
+                      <span className="px-3 py-1 rounded-full border border-sentinel-critical/40 bg-sentinel-critical/10 text-sentinel-critical text-xs font-mono animate-pulse">
+                        🛡️ CIRCUIT BREAKER ACTIVE
+                      </span>
+                    )}
+                    {isFirstRun && (
+                      <span className="px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-mono">
+                        📌 SEEDING BASELINE
+                      </span>
+                    )}
                   </div>
-                  <span className="font-mono font-bold text-xl text-sentinel-accent">
-                    {formatUSD(o.tvl)}
+                  <p className="text-sentinel-muted text-sm font-body max-w-lg">
+                    Monitoring {latest.protocols.length} protocols across {latest.chains.length} chains
+                    with {formatUSD(latest.aggregate.totalActualUSD)} in aggregate reserves.
+                    Powered by Chainlink CRE · DON-signed reports · SentinalGuard circuit breaker.
+                  </p>
+                </div>
+                <RiskGauge score={latest.riskScore} />
+              </div>
+            </section>
+
+            {/* ── Chain Coverage ─────────────────────── */}
+            <section className="mb-8 animate-fade-in" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">CHAIN COVERAGE</span>
+                <div className="flex-1 h-px bg-sentinel-border" />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {latest.chains.map(chain => (
+                  <ChainBadge key={chain} chain={chain} />
+                ))}
+              </div>
+            </section>
+
+            {/* ── Key Metrics ────────────────────────── */}
+            <section className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">KEY METRICS</span>
+                <div className="flex-1 h-px bg-sentinel-border" />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+                <StatCard label="Reserves" value={formatUSD(latest.aggregate.totalActualUSD)} icon={<DollarIcon />} color="#00D4AA" delay={50} />
+                <StatCard label="Protocols" value={latest.protocols.length} icon={<LayersIcon />} color="#3B82F6" delay={100} />
+                <StatCard label="Chains" value={latest.chains.length} icon={<LinkIcon />} color="#8B5CF6" delay={150} />
+                <StatCard label="Total TVL" value={formatUSD(totalTVL)} icon={<GlobeIcon />} color="#06B6D4" delay={200} subtitle="DeFiLlama" />
+                <StatCard label="Checks" value={history.length} icon={<ShieldIcon />} color="#F59E0B" delay={250} />
+                <StatCard label="Anomalies" value={history.filter(h => h.anomalyDetected).length} icon={<AlertIcon />} color={history.some(h => h.anomalyDetected) ? '#FF4560' : '#64748B'} delay={300} />
+                <StatCard label="⚡ Vel Alerts" value={totalVelocityAlertsInHistory} icon={<ZapIcon />} color={totalVelocityAlertsInHistory > 0 ? '#FF4560' : '#64748B'} delay={350} />
+                <StatCard label="Registered" value={guard?.registered ?? '—'} icon={<ShieldIcon />} color="#00D4AA" delay={400} subtitle="on guard" />
+              </div>
+            </section>
+
+            {/* ── Protocol Grid ──────────────────────── */}
+            <section className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">PROTOCOL SOLVENCY</span>
+                <div className="flex-1 h-px bg-sentinel-border" />
+                {!isFirstRun && velocityAlerts.length > 0 && (
+                  <span className="text-[10px] font-mono text-sentinel-critical">
+                    ⚡ {velocityAlerts.length} velocity spike{velocityAlerts.length > 1 ? 's' : ''} detected
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {latest.protocols.map((protocol, i) => (
+                  <ProtocolCard key={protocol.name} protocol={protocol} delay={i * 80} />
+                ))}
+              </div>
+            </section>
+
+            {/* ── History Chart ───────────────────────── */}
+            <section className="mb-8">
+              <div className="bg-sentinel-card border border-sentinel-border rounded-xl p-6 animate-slide-up"
+                style={{ animationDelay: '400ms' }}>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <ActivityIcon />
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">AVG UTILIZATION</span>
+                  </div>
+                  <span className="text-xs font-mono text-sentinel-muted">
+                    Last {Math.min(history.length, 30)} checks
                   </span>
                 </div>
-              ))}
-              <div className="flex items-center justify-between p-4 rounded-lg bg-sentinel-accent/5 border border-sentinel-accent/20 md:col-span-2">
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-wider">TOTAL TVL MONITORED</span>
-                <span className="font-mono font-bold text-2xl text-sentinel-accent">
-                  {formatUSD(totalTVL)}
-                </span>
+                <HistoryChart history={history} />
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        {/* ── Latest Onchain Report ────────────────── */}
-        <section className="mb-8 animate-slide-up" style={{ animationDelay: '600ms' }}>
-          <div className="bg-sentinel-card border border-sentinel-border rounded-xl p-6">
-            <div className="flex items-center gap-3 mb-5">
-              <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">LATEST ONCHAIN REPORT</span>
-              <div className="flex-1 h-px bg-sentinel-border" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div>
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">TX HASH</span>
-                {latest.txHash && !latest.txHash.startsWith('0x000000') ? (
-                  <a href={`https://sepolia.etherscan.io/tx/${latest.txHash}`}
-                    target="_blank" rel="noopener noreferrer"
-                    className="font-mono text-xs text-sentinel-accent hover:underline">
-                    {latest.txHash.slice(0, 10)}...{latest.txHash.slice(-8)}
-                  </a>
-                ) : (
-                  <span className="font-mono text-xs text-sentinel-muted">Simulation mode</span>
-                )}
+            {/* ── Offchain TVL ────────────────────────── */}
+            <section className="mb-8 animate-slide-up" style={{ animationDelay: '500ms' }}>
+              <div className="bg-sentinel-card border border-sentinel-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <GlobeIcon />
+                  <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">OFFCHAIN TVL — DEFI LLAMA</span>
+                  <div className="flex-1 h-px bg-sentinel-border" />
+                  <span className="text-[10px] font-mono text-sentinel-muted">DON consensus median</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {latest.offchain.map(o => (
+                    <div key={o.slug} className="flex items-center justify-between p-4 rounded-lg bg-sentinel-bg border border-sentinel-border">
+                      <div>
+                        <span className="font-mono text-sm text-sentinel-text capitalize">{o.slug}</span>
+                        <span className="block text-[10px] font-mono text-sentinel-muted mt-0.5">
+                          Cross-referenced against onchain data
+                        </span>
+                      </div>
+                      <span className="font-mono font-bold text-xl text-sentinel-accent">
+                        {formatUSD(o.tvl)}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-sentinel-accent/5 border border-sentinel-accent/20 md:col-span-2">
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-wider">TOTAL TVL MONITORED</span>
+                    <span className="font-mono font-bold text-2xl text-sentinel-accent">
+                      {formatUSD(totalTVL)}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">ORACLE</span>
-                <a href={`https://sepolia.etherscan.io/address/${ORACLE_ADDRESS}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="font-mono text-xs text-sentinel-blue hover:underline">
-                  {ORACLE_ADDRESS.slice(0, 10)}...{ORACLE_ADDRESS.slice(-6)}
-                </a>
-              </div>
-              <div>
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">GUARD</span>
-                <a href={`https://sepolia.etherscan.io/address/${GUARD_ADDRESS}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="font-mono text-xs text-sentinel-blue hover:underline">
-                  {GUARD_ADDRESS.slice(0, 10)}...{GUARD_ADDRESS.slice(-6)}
-                </a>
-              </div>
-              <div>
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">WORST SOLVENCY</span>
-                <span className="font-mono text-xs text-sentinel-text">
-                  {latest.aggregate.worstProtocol || 'N/A'} — {latest.aggregate.worstSolvency}%
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">DATA SOURCES</span>
-                <span className="font-mono text-xs text-sentinel-text">
-                  {latest.protocols.length} onchain · {latest.offchain.length} offchain · 1 oracle
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
-        {/* ── CRE Capabilities ────────────────────── */}
-        <section className="mb-8 animate-slide-up" style={{ animationDelay: '700ms' }}>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">CHAINLINK CRE CAPABILITIES USED</span>
-            <div className="flex-1 h-px bg-sentinel-border" />
-            <span className="text-[10px] font-mono text-sentinel-muted">15/15 EVM calls</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-            {[
-              { name: 'Cron Trigger', icon: '⏰', note: 'every 60s' },
-              { name: 'EVM Read', icon: '📖', note: 'calls 1–14' },
-              { name: 'HTTP GET', icon: '🌐', note: 'DeFiLlama' },
-              { name: 'DON Consensus', icon: '🤝', note: 'median TVL' },
-              { name: 'EVM Write', icon: '✍️', note: 'DON-signed' },
-              { name: 'DON Time', icon: '🕐', note: 'timestamp' },
-              { name: 'HTTP POST', icon: '📤', note: 'Discord' },
-            ].map((cap, i) => (
-              <div key={cap.name}
-                className="bg-sentinel-card border border-sentinel-border rounded-lg px-3 py-3 text-center card-hover"
-                style={{ animationDelay: `${700 + i * 50}ms` }}>
-                <span className="text-lg block mb-1">{cap.icon}</span>
-                <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block">{cap.name}</span>
-                <span className="text-[9px] font-mono text-sentinel-muted/60">{cap.note}</span>
+            {/* ── Latest Onchain Report ────────────────── */}
+            <section className="mb-8 animate-slide-up" style={{ animationDelay: '600ms' }}>
+              <div className="bg-sentinel-card border border-sentinel-border rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">LATEST ONCHAIN REPORT</span>
+                  <div className="flex-1 h-px bg-sentinel-border" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div>
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">TX HASH</span>
+                    {latest.txHash && !latest.txHash.startsWith('0x000000') ? (
+                      <a href={`https://sepolia.etherscan.io/tx/${latest.txHash}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="font-mono text-xs text-sentinel-accent hover:underline">
+                        {latest.txHash.slice(0, 10)}...{latest.txHash.slice(-8)}
+                      </a>
+                    ) : (
+                      <span className="font-mono text-xs text-sentinel-muted">Simulation mode</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">ORACLE</span>
+                    <a href={`https://sepolia.etherscan.io/address/${ORACLE_ADDRESS}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="font-mono text-xs text-sentinel-blue hover:underline">
+                      {ORACLE_ADDRESS.slice(0, 10)}...{ORACLE_ADDRESS.slice(-6)}
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">GUARD</span>
+                    <a href={`https://sepolia.etherscan.io/address/${GUARD_ADDRESS}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="font-mono text-xs text-sentinel-blue hover:underline">
+                      {GUARD_ADDRESS.slice(0, 10)}...{GUARD_ADDRESS.slice(-6)}
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">WORST SOLVENCY</span>
+                    <span className="font-mono text-xs text-sentinel-text">
+                      {latest.aggregate.worstProtocol || 'N/A'} — {latest.aggregate.worstSolvency}%
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block mb-1">DATA SOURCES</span>
+                    <span className="font-mono text-xs text-sentinel-text">
+                      {latest.protocols.length} onchain · {latest.offchain.length} offchain · 1 oracle
+                    </span>
+                  </div>
+                </div>
               </div>
-            ))}
+            </section>
+
+            {/* ── CRE Capabilities ────────────────────── */}
+            <section className="mb-8 animate-slide-up" style={{ animationDelay: '700ms' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">CHAINLINK CRE CAPABILITIES USED</span>
+                <div className="flex-1 h-px bg-sentinel-border" />
+                <span className="text-[10px] font-mono text-sentinel-muted">15/15 EVM calls</span>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {[
+                  { name: 'Cron Trigger', icon: '⏰', note: 'every 60s' },
+                  { name: 'EVM Read', icon: '📖', note: 'calls 1–14' },
+                  { name: 'HTTP GET', icon: '🌐', note: 'DeFiLlama' },
+                  { name: 'DON Consensus', icon: '🤝', note: 'median TVL' },
+                  { name: 'EVM Write', icon: '✍️', note: 'DON-signed' },
+                  { name: 'DON Time', icon: '🕐', note: 'timestamp' },
+                  { name: 'HTTP POST', icon: '📤', note: 'Discord' },
+                ].map((cap, i) => (
+                  <div key={cap.name}
+                    className="bg-sentinel-card border border-sentinel-border rounded-lg px-3 py-3 text-center card-hover"
+                    style={{ animationDelay: `${700 + i * 50}ms` }}>
+                    <span className="text-lg block mb-1">{cap.icon}</span>
+                    <span className="text-[10px] font-mono text-sentinel-muted tracking-wider block">{cap.name}</span>
+                    <span className="text-[9px] font-mono text-sentinel-muted/60">{cap.note}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+
+        {/* ════════════════════════════════════════
+            TAB: GUARD & VAULT
+            ════════════════════════════════════════ */}
+        {activeTab === 'guard' && (
+          <div className="animate-fade-in">
+            {/* Status banner if paused */}
+            {guardPaused && (
+              <div className="mb-6 p-4 rounded-xl border border-sentinel-critical/40 bg-sentinel-critical/5 flex items-center gap-3">
+                <span className="w-3 h-3 rounded-full bg-sentinel-critical animate-pulse flex-shrink-0" />
+                <div>
+                  <span className="font-mono font-bold text-sm text-sentinel-critical">CIRCUIT BREAKER ACTIVE</span>
+                  <span className="font-mono text-xs text-sentinel-muted block mt-0.5">
+                    All registered vaults are currently blocking transactions. SentinalGuard is protecting funds.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <GuardPanel
+                status={guard}
+                velocityAlerts={velocityAlerts}
+                isFirstRun={isFirstRun}
+              />
+              <VaultCard guardPaused={guardPaused} />
+            </div>
+
+            {/* Integration callout */}
+            <div className="mt-6 p-6 rounded-xl border border-sentinel-border bg-sentinel-card animate-slide-up" style={{ animationDelay: '200ms' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-[10px] font-mono text-sentinel-muted tracking-[0.2em]">HOW SENTINALGUARD WORKS</span>
+                <div className="flex-1 h-px bg-sentinel-border" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[
+                  { step: '01', title: 'CRE Monitors', desc: 'Chainlink CRE runs every 60s reading 15 onchain data points across 4 protocols and 3 chains.' },
+                  { step: '02', title: 'Oracle Reports', desc: 'DON-signed report submitted onchain. If solvency drops or velocity spikes, Guard is triggered.' },
+                  { step: '03', title: 'Vault Protected', desc: 'Any vault calling guard.isSafe() is instantly blocked during a circuit-breaker event.' },
+                ].map(({ step, title, desc }) => (
+                  <div key={step} className="flex gap-4">
+                    <span className="font-mono font-bold text-2xl text-sentinel-accent/30 flex-shrink-0 leading-none">{step}</span>
+                    <div>
+                      <span className="font-mono font-bold text-sm text-sentinel-text block mb-1">{title}</span>
+                      <span className="text-xs text-sentinel-muted font-body leading-relaxed">{desc}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </section>
+        )}
 
         {/* ── Footer ──────────────────────────────── */}
-        <footer className="border-t border-sentinel-border pt-6 pb-10">
+        <footer className="border-t border-sentinel-border pt-6 pb-10 mt-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <span className="text-xs font-mono text-sentinel-muted">Powered by</span>
               <span className="text-xs font-mono text-sentinel-accent font-bold">Chainlink CRE</span>
               <span className="text-sentinel-border">·</span>
               <span className="text-xs font-mono text-sentinel-muted">Protected by</span>
-              <span className="text-xs font-mono font-bold" style={{ color: '#00E676' }}>SentinalGuard</span>
+              <span className="text-xs font-mono font-bold" style={{ color: '#00D4AA' }}>SentinalGuard</span>
             </div>
             <div className="flex items-center gap-4">
-
               <a href="https://discord.gg/Wq8arAHf"
                 target="_blank"
                 rel="noopener noreferrer"

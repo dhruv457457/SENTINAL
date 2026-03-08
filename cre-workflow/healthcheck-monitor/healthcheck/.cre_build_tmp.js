@@ -17583,7 +17583,7 @@ function healthCheckWorkflow(runtime2, _payload) {
   const writeResult = sepoliaClient.writeReport(runtime2, {
     receiver: config.oracleAddress,
     report: reportResponse,
-    gasConfig: { gasLimit: "500000" }
+    gasConfig: { gasLimit: "1000000" }
   }).result();
   const txHash = bytesToHex(writeResult.txHash || new Uint8Array(32));
   runtime2.log(`   ✅ Report submitted: ${txHash}`);

@@ -8,10 +8,10 @@ import { sepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 
 // ── CONFIG ────────────────────────────────────────
-const PRIVATE_KEY = process.env.PRIVATE_KEY || 'YOUR_PRIVATE_KEY_HERE';
+const PRIVATE_KEY = "78009f3cc416fd1bb6cf5533940d998b9c9e4252d9711f5c7d24d833ff712b5d";
 const ORACLE_ADDRESS = '0x985eb2859e7502f38d3944a4a6d10aa5d7158b24';
 const GUARD_ADDRESS = '0xfc3082f4954f36ce7794e6c49769b9bf819fc80a';
-const VAULT_ADDRESS = '0x29Ac4504A053f8Ac60127366fF69f91D4F32Bf58';
+const VAULT_ADDRESS = '0xFC7278d24159026C24d8b8469471331a74b8406A';
 const RPC_URL = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
 
 // ── ABIs ──────────────────────────────────────────

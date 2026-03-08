@@ -372,7 +372,7 @@ app.get('/api/vault/status', async (req, res) => {
         const { createPublicClient, http, parseAbi, formatEther } = await import('viem');
         const { sepolia } = await import('viem/chains');
 
-        const VAULT_ADDRESS = process.env.VAULT_ADDRESS || '0x29Ac4504A053f8Ac60127366fF69f91D4F32Bf58';
+        const VAULT_ADDRESS = process.env.VAULT_ADDRESS || '0xFC7278d24159026C24d8b8469471331a74b8406A';
         const RPC = process.env.SEPOLIA_RPC || 'https://ethereum-sepolia-rpc.publicnode.com';
 
         const VAULT_ABI = parseAbi([
@@ -393,7 +393,7 @@ app.get('/api/vault/status', async (req, res) => {
                 functionName: 'getDashboardData',
             }),
             client.readContract({
-                address: process.env.GUARD_ADDRESS || '0xf9955c8b6e62eab7ab7fbedb4a2e90b6f6ad3905',
+address: process.env.GUARD_ADDRESS || '0xfc3082f4954f36ce7794e6c49769b9bf819fc80a',
                 abi: GUARD_ABI,
                 functionName: 'getRegistration',
                 args: [VAULT_ADDRESS],

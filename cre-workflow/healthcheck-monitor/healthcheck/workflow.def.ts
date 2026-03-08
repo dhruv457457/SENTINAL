@@ -364,7 +364,7 @@ export function healthCheckWorkflow(
         .writeReport(runtime, {
             receiver: config.oracleAddress as `0x${string}`,
             report: reportResponse,
-            gasConfig: { gasLimit: '500000' },
+gasConfig: { gasLimit: '1000000' },
         })
         .result()
 

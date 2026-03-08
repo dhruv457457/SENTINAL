@@ -11,17 +11,21 @@ export function HistoryChart({ history }: { history: HealthCheck[] }) {
         );
     }
 
-    const maxRisk = Math.max(...history.map(h => h.riskScore), 10);
+    const getAvgUtil = (h: HealthCheck) => {
+        const utils = h.protocols.map(p => p.utilizationBps ?? 0).filter(v => v > 0);
+        return utils.length ? utils.reduce((a, b) => a + b, 0) / utils.length : 0;
+    };
+
+    const maxUtil = Math.max(...history.map(h => getAvgUtil(h)), 1000);
     const chartHeight = 160;
-    const chartWidth = 100; // percentage
 
     return (
         <div className="relative">
             {/* Y-axis labels */}
             <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-[10px] font-mono text-sentinel-muted w-8">
-                <span>{maxRisk}</span>
-                <span>{Math.floor(maxRisk / 2)}</span>
-                <span>0</span>
+                <span>{(maxUtil / 100).toFixed(0)}%</span>
+                <span>{(maxUtil / 200).toFixed(0)}%</span>
+                <span>0%</span>
             </div>
 
             {/* Chart area */}
@@ -36,9 +40,10 @@ export function HistoryChart({ history }: { history: HealthCheck[] }) {
                 {/* Bars */}
                 <div className="absolute inset-0 flex items-end gap-1 px-1">
                     {history.slice(-30).map((check, i) => {
-                        const height = maxRisk > 0 ? (check.riskScore / maxRisk) * 100 : 0;
-                        const color = check.riskScore < 30 ? '#00E676' : check.riskScore < 60 ? '#FFD600' : '#FF1744';
-                        const minHeight = check.riskScore === 0 ? 3 : Math.max(height, 3);
+                        const score = getAvgUtil(check);
+                        const height = maxUtil > 0 ? (score / maxUtil) * 100 : 0;
+                        const color = score < 5000 ? '#00D4AA' : score < 7000 ? '#F59E0B' : '#FF4560';
+                        const minHeight = Math.max(height, 5);
 
                         return (
                             <div
@@ -56,10 +61,10 @@ export function HistoryChart({ history }: { history: HealthCheck[] }) {
                                     <div className="bg-sentinel-card border border-sentinel-border rounded-lg px-3 py-2 whitespace-nowrap shadow-xl">
                                         <div className="font-mono text-xs text-sentinel-text">Check #{check.checkNumber}</div>
                                         <div className="font-mono text-xs" style={{ color }}>
-                                            Risk: {check.riskScore}/100
+                                            Avg Util: {(score / 100).toFixed(1)}%
                                         </div>
                                         <div className="font-mono text-[10px] text-sentinel-muted">
-                                            {check.severity}
+                                            {check.protocols.length} protocols
                                         </div>
                                     </div>
                                 </div>

@@ -1,26 +1,257 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ══════════════════════════════════════════════════════════
+   SENTINAL — Design System
+   Premium dark-mode DeFi dashboard
+   ══════════════════════════════════════════════════════════ */
 
+/* ── Color Tokens (Tailwind v4 @theme) ─────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Brand palette */
+  --color-sentinel-bg:       #060B14;
+  --color-sentinel-card:     #0D1421;
+  --color-sentinel-card-alt: #111827;
+  --color-sentinel-border:   #1A2535;
+  --color-sentinel-text:     #E2E8F0;
+  --color-sentinel-muted:    #64748B;
+  --color-sentinel-accent:   #00D4AA;
+  --color-sentinel-critical: #FF4560;
+  --color-sentinel-blue:     #3B82F6;
+  --color-sentinel-yellow:   #F59E0B;
+
+  /* Font families */
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-body:    'Inter', system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base Styles ───────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --background: #060B14;
+  --foreground: #E2E8F0;
+
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #060B14;
+  color: #E2E8F0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+::selection {
+  background-color: #00D4AA30;
+  color: #00D4AA;
+}
+
+/* ── Typography Utilities ──────────────────────────────── */
+.font-display {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+}
+
+.font-body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #060B14;
+}
+::-webkit-scrollbar-thumb {
+  background: #1A2535;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #243044;
+}
+
+/* ── Keyframes ─────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes scan-line {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glow-pulse-green {
+  0%, 100% { box-shadow: 0 0 12px #00D4AA30, 0 0 24px #00D4AA10; }
+  50%       { box-shadow: 0 0 20px #00D4AA50, 0 0 40px #00D4AA20; }
+}
+
+@keyframes glow-pulse-red {
+  0%, 100% { box-shadow: 0 0 12px #FF456030, 0 0 24px #FF456010; }
+  50%       { box-shadow: 0 0 20px #FF456050, 0 0 40px #FF456020; }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: scale(0.9); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Animation Classes ─────────────────────────────────── */
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-ping {
+  animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-count-up {
+  animation: count-up 0.4s ease-out both;
+}
+
+/* ── Grid Background ───────────────────────────────────── */
+.grid-bg {
+  background-color: #060B14;
+  background-image:
+    linear-gradient(rgba(0, 212, 170, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 170, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center center;
+}
+
+/* ── Noise Overlay ─────────────────────────────────────── */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+  opacity: 0.4;
+}
+
+/* ── Card Hover Effect ─────────────────────────────────── */
+.card-hover {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-hover:hover {
+  border-color: #00D4AA25 !important;
+  box-shadow: 0 0 0 1px #00D4AA15, 0 8px 32px #00000040;
+  transform: translateY(-1px);
+}
+
+/* ── Status Dot (animated) ─────────────────────────────── */
+.status-dot {
+  position: relative;
+  display: inline-flex;
+}
+
+/* ── Glow Utilities ────────────────────────────────────── */
+.glow-green {
+  box-shadow: 0 0 16px #00D4AA20, 0 0 32px #00D4AA08;
+  animation: glow-pulse-green 3s ease-in-out infinite;
+}
+
+.glow-yellow {
+  box-shadow: 0 0 16px #F59E0B20, 0 0 32px #F59E0B08;
+}
+
+.glow-red {
+  box-shadow: 0 0 16px #FF456020, 0 0 32px #FF456008;
+  animation: glow-pulse-red 2s ease-in-out infinite;
+}
+
+/* ── Scan Line Effect (on cards) ─────────────────────────*/
+.scan-effect::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, #00D4AA40, transparent);
+  pointer-events: none;
+}
+
+/* ── Chart Tooltip ─────────────────────────────────────── */
+.tooltip-shadow {
+  box-shadow: 0 4px 24px #00000060, 0 0 0 1px #1A2535;
+}
+
+/* ── Code Block ────────────────────────────────────────── */
+code, pre {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* ── Focus Ring ────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #00D4AA;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Link Transitions ──────────────────────────────────── */
+a {
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ── Gradient Text ─────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #00D4AA, #3B82F6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Progress Bar Shimmer ──────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #00D4AA15 50%,
+    transparent 100%
+  );
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
 }
